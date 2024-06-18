@@ -1,0 +1,14 @@
+federation_version: 2
+traffic_shaping:
+  router:
+    timeout: 30s # 客户端和router的超时
+subgraphs:
+  content:
+    schema:
+      subgraph_url: http://localhost:4001
+  transform:
+    schema:
+      subgraph_url: http://localhost:4002
+  ai:
+    schema:
+      subgraph_url: http://localhost:4003
