@@ -1,0 +1,14 @@
+# batching:
+#   # 批处理 需要许可证，等fork项目自己改
+#   enabled: false
+#   mode: batch_http_link
+#   subgraph:
+#     all:
+#       enabled: false
+
+supergraph:
+  # The socket address and port to listen on
+  listen: 127.0.0.1:4000
+  # 查询规划器池 提高查询性能
+  query_planning:
+    experimental_parallelism: auto

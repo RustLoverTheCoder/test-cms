@@ -4,12 +4,12 @@
 
 rover dev --supergraph-config supergraph.yaml
 or
-./router --dev --supergraph supergraph.graphql
+./router --dev --config router.yaml --supergraph supergraph.graphql --log debug --anonymous-telemetry-disabled
 
 ## build
 
 rover supergraph compose --config ./supergraph.yaml --output supergraph.graphql
-./router --supergraph supergraph.graphql
+./router --config router.yaml --supergraph supergraph.graphql
 
 ## bench
 cargo install oha
