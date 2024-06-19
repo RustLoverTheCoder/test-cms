@@ -9,3 +9,6 @@ subgraphs:
   ai:
     schema:
       subgraph_url: http://localhost:4003
+  relation:
+    schema:
+      subgraph_url: http://localhost:4004

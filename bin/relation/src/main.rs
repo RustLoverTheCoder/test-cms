@@ -1,6 +1,5 @@
 use async_graphql::{
-    http::GraphiQLSource, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject,
-    ID,
+    http::GraphiQLSource, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject, ID,
 };
 use async_graphql_axum::GraphQL;
 use axum::{
@@ -17,7 +16,7 @@ async fn graphiql() -> impl IntoResponse {
 #[derive(SimpleObject)]
 pub struct Content {
     id: ID,
-    tag: Vec<String>,
+    relation_content: Vec<Content>,
 }
 
 struct Query;
@@ -30,12 +29,12 @@ impl Query {
         if id == "1234" {
             Content {
                 id: "1234".into(),
-                tag: vec!["xx".to_string(), "test".to_string()],
+                relation_content: Vec::new(),
             }
         } else {
             Content {
                 id: "1234".into(),
-                tag: vec!["xx".to_string(), "test".to_string()],
+                relation_content: Vec::new(),
             }
         }
     }
@@ -50,9 +49,9 @@ async fn main() {
 
     let app = Router::new().route("/", get(graphiql).post_service(GraphQL::new(schema)));
 
-    println!("ai server run: http://localhost:4003");
+    println!("ai server run: http://localhost:4004");
 
-    axum::serve(TcpListener::bind("127.0.0.1:4003").await.unwrap(), app)
+    axum::serve(TcpListener::bind("127.0.0.1:4004").await.unwrap(), app)
         .await
         .unwrap();
 }
