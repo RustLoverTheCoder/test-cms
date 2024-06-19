@@ -7,7 +7,7 @@ rover dev --supergraph-config supergraph.yaml
 ## build
 
 rover supergraph compose --config ./supergraph.yaml --output supergraph.graphql
-./router --supergraph supergraph-schema.graphql
+./router --supergraph supergraph.graphql
 
 ## Role and Permissions
 

@@ -23,23 +23,37 @@ directive @link(url: String, as: String, for: link__Purpose, import: [link__Impo
 
 directive @lowercase on FIELD
 
+type Account
+  @join__type(graph: ACCOUNT, key: "id")
+{
+  id: ID!
+  name: String!
+  desc: String!
+  roles: [String!]!
+  permissions: [String!]!
+}
+
 type Content
   @join__type(graph: AI, key: "id")
   @join__type(graph: CONTENT, key: "id")
+  @join__type(graph: RELATION, key: "id")
   @join__type(graph: TRANSFORM, key: "id")
 {
   id: ID!
   tag: [String!]! @join__field(graph: AI)
   name: String @join__field(graph: CONTENT)
   reviewCount: Int! @join__field(graph: CONTENT)
+  relationContent: [Content!]! @join__field(graph: RELATION)
   cropUrl: String @join__field(graph: TRANSFORM)
 }
 
 scalar join__FieldSet
 
 enum join__Graph {
+  ACCOUNT @join__graph(name: "account", url: "http://localhost:4005/")
   AI @join__graph(name: "ai", url: "http://localhost:4003/")
   CONTENT @join__graph(name: "content", url: "http://localhost:4001/")
+  RELATION @join__graph(name: "relation", url: "http://localhost:4004/")
   TRANSFORM @join__graph(name: "transform", url: "http://localhost:4002/")
 }
 
@@ -58,9 +72,14 @@ enum link__Purpose {
 }
 
 type Query
+  @join__type(graph: ACCOUNT)
   @join__type(graph: AI)
   @join__type(graph: CONTENT)
+  @join__type(graph: RELATION)
   @join__type(graph: TRANSFORM)
 {
+  account(id: ID!): Account! @join__field(graph: ACCOUNT)
+  accounts: [Account!]! @join__field(graph: ACCOUNT)
+  findTags: [String!]! @join__field(graph: AI)
   findContentById: Content! @join__field(graph: CONTENT)
 }

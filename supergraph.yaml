@@ -12,3 +12,6 @@ subgraphs:
   relation:
     schema:
       subgraph_url: http://localhost:4004
+  account:
+    schema:
+      subgraph_url: http://localhost:4005

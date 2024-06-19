@@ -1,5 +1,5 @@
 use async_graphql::{
-    http::GraphiQLSource, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject,
+    http::GraphiQLSource, Context, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject,
     ID,
 };
 use async_graphql_axum::GraphQL;
@@ -24,6 +24,10 @@ struct Query;
 
 #[Object]
 impl Query {
+    async fn find_tags(&self) -> Vec<String> {
+        vec!["xx".to_string(), "test".to_string()]
+    }
+
     #[graphql(entity)]
     async fn find_content_by_id(&self, id: ID) -> Content {
         println!("ai id: {id:?}");
