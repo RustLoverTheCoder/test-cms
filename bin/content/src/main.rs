@@ -17,6 +17,17 @@ async fn graphiql() -> impl IntoResponse {
 pub struct Content {
     id: ID,
     name: Option<String>,
+    review_count: u32,
+}
+
+impl Content {
+    fn me() -> Content {
+        Content {
+            id: "1234".into(),
+            name: Some("Test.mp4".to_string()),
+            review_count: 0,
+        }
+    }
 }
 
 struct Query;
@@ -24,9 +35,16 @@ struct Query;
 #[Object]
 impl Query {
     async fn find_content_by_id(&self) -> Content {
-        Content {
-            id: "1234".into(),
-            name: Some("Test.mp4".to_string()),
+        Content::me()
+    }
+
+    #[graphql(entity)]
+    async fn find_user_by_id(&self, id: ID) -> Content {
+        println!("content id: {id:?}");
+        if id == "1234" {
+            Content::me()
+        } else {
+            Content::me()
         }
     }
 }

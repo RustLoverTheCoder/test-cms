@@ -23,10 +23,19 @@ struct Query;
 
 #[Object]
 impl Query {
-    async fn find_content_by_id(&self) -> Content {
-        Content {
-            id: "1234".into(),
-            crop_url: Some("oss".to_string()),
+    #[graphql(entity)]
+    async fn find_content_by_id(&self, id: ID) -> Content {
+        println!("transform id: {id:?}");
+        if id == "1234" {
+            Content {
+                id: "1234".into(),
+                crop_url: Some("oss".to_string()),
+            }
+        } else {
+            Content {
+                id: "1234".into(),
+                crop_url: Some("oss".to_string()),
+            }
         }
     }
 }

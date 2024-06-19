@@ -24,13 +24,20 @@ struct Query;
 
 #[Object]
 impl Query {
-    async fn find_content_by_id(&self, ctx: &Context<'_>) -> Result<Content, async_graphql::Error> {
-        // let user = ctx.data::<User>()?;
-        // println!("user: {user:?}");
-        Ok(Content {
-            id: "1234".into(),
-            tag: vec!["xx".to_string(), "test".to_string()],
-        })
+    #[graphql(entity)]
+    async fn find_content_by_id(&self, id: ID) -> Content {
+        println!("ai id: {id:?}");
+        if id == "1234" {
+            Content {
+                id: "1234".into(),
+                tag: vec!["xx".to_string(), "test".to_string()],
+            }
+        } else {
+            Content {
+                id: "1234".into(),
+                tag: vec!["xx".to_string(), "test".to_string()],
+            }
+        }
     }
 }
 
