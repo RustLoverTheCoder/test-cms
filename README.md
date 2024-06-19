@@ -3,6 +3,8 @@
 ## dev
 
 rover dev --supergraph-config supergraph.yaml
+or
+./router --dev --supergraph supergraph.graphql
 
 ## build
 
