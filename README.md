@@ -12,6 +12,7 @@ rover supergraph compose --config ./supergraph.yaml --output supergraph.graphql
 ./router --supergraph supergraph.graphql
 
 ## bench
+cargo install oha
 oha -c 8 -z 10s -A 'content-type: application/json' -d '{"query":"query { accounts {id} }"}' 'http://127.0.0.1:4000/'
 
 ## Role and Permissions
