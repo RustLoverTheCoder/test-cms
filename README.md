@@ -4,12 +4,12 @@
 
 rover dev --supergraph-config supergraph.yaml
 or
-APOLLO_KEY="Admin" APOLLO_GRAPH_REF="Admin" ./router --dev --config router.yaml --supergraph supergraph.graphql --log debug --anonymous-telemetry-disabled
+./router --dev --config router.yaml --supergraph supergraph.graphql --log debug --anonymous-telemetry-disabled
 
 ## build
 
 rover supergraph compose --config ./supergraph.yaml --output supergraph.graphql
-./router --config router.yaml --supergraph supergraph.graphql
+./router --config router.yaml --supergraph supergraph.graphql --log info --anonymous-telemetry-disabled
 
 ## bench
 cargo install oha
