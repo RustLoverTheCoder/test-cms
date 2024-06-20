@@ -25,7 +25,7 @@ impl Content {
         Content {
             id: "1234".into(),
             name: Some("Test.mp4".to_string()),
-            review_count: 0,
+            review_count: 99,
         }
     }
 }
