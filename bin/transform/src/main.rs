@@ -1,5 +1,6 @@
 use async_graphql::{
-    http::GraphiQLSource, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject, ID,
+    http::GraphiQLSource, EmptyMutation, EmptySubscription, InputObject, Object, Schema,
+    SimpleObject, ID,
 };
 use async_graphql_axum::GraphQL;
 use axum::{
@@ -21,20 +22,33 @@ pub struct Content {
 
 struct Query;
 
+#[derive(InputObject)]
+struct Size {
+    w: i32,
+    h: i32,
+}
+
 #[Object]
 impl Query {
+    async fn get_crop_url(&self, #[graphql(key)] id: ID, size: Size) -> Content {
+        Content {
+            id,
+            crop_url: Some(format!("oss?w={}&h={}", size.w, size.h)),
+        }
+    }
+
     #[graphql(entity)]
-    async fn find_content_by_id(&self, id: ID) -> Content {
+    async fn find_content_by_id(&self, #[graphql(key)] id: ID) -> Content {
         println!("transform id: {id:?}");
         if id == "1234" {
             Content {
                 id: "1234".into(),
-                crop_url: Some("oss".to_string()),
+                crop_url: Some(format!("oss")),
             }
         } else {
             Content {
                 id: "1234".into(),
-                crop_url: Some("oss".to_string()),
+                crop_url: Some(format!("oss")),
             }
         }
     }

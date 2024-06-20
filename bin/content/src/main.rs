@@ -34,8 +34,12 @@ struct Query;
 
 #[Object]
 impl Query {
-    async fn find_content_by_id(&self) -> Content {
-        Content::me()
+    async fn find_content_by_id(&self, id: ID) -> Content {
+        Content {
+            id,
+            name: Some("Test.mp4".to_string()),
+            review_count: 0,
+        }
     }
 
     #[graphql(entity)]

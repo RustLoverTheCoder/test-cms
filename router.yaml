@@ -6,6 +6,32 @@
 #     all:
 #       enabled: false
 
+ # jwt 需要许可证，等fork项目自己改
+# authentication:
+#   router:
+#     jwt:
+#       jwks: # This key is required.
+#         - url: https://dev-zzp5enui.us.auth0.com/.well-known/jwks.json
+#           issuer: muse
+#           headers: # optional list of static headers added to the HTTP request to the JWKS URL
+#             - name: User-Agent
+#               value: router
+#       # These keys are optional. Default values are shown.
+#       header_name: Authorization
+#       header_value_prefix: Bearer
+#       # array of alternative token sources
+#       sources:
+#         - type: header
+#           name: X-Authorization
+#           value_prefix: Bearer
+
+headers:
+  all: # Header rules for all subgraphs
+    request:
+      - propagate:
+          #  matching: .* # 所有
+          matching: Authorization
+
 supergraph:
   # The socket address and port to listen on
   listen: 127.0.0.1:4000

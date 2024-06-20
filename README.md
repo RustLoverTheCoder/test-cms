@@ -4,7 +4,7 @@
 
 rover dev --supergraph-config supergraph.yaml
 or
-./router --dev --config router.yaml --supergraph supergraph.graphql --log debug --anonymous-telemetry-disabled
+APOLLO_KEY="Admin" APOLLO_GRAPH_REF="Admin" ./router --dev --config router.yaml --supergraph supergraph.graphql --log debug --anonymous-telemetry-disabled
 
 ## build
 
