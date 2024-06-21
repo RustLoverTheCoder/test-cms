@@ -34,7 +34,13 @@ struct Query;
 
 #[Object]
 impl Query {
-    async fn find_content_by_id(&self, id: ID) -> Content {
+    async fn find_content_by_id(
+        &self,
+        id: ID,
+        _prompt: Option<String>,
+        _limit: Option<u64>,
+        _offset: Option<u64>,
+    ) -> Content {
         Content {
             id,
             name: Some("Test.mp4".to_string()),
