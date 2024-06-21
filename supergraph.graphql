@@ -81,5 +81,13 @@ type Query
   account(id: ID!): Account! @join__field(graph: ACCOUNT)
   accounts: [Account!]! @join__field(graph: ACCOUNT)
   findTags: [String!]! @join__field(graph: AI)
-  findContentById: Content! @join__field(graph: CONTENT)
+  findContentById(id: ID!): Content! @join__field(graph: CONTENT)
+  getCropUrl(id: ID!, size: Size!): Content! @join__field(graph: TRANSFORM)
+}
+
+input Size
+  @join__type(graph: TRANSFORM)
+{
+  w: Int!
+  h: Int!
 }

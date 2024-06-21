@@ -6,13 +6,19 @@ batching:
     all:
       enabled: false
 
+# 授权 需要许可证
+# 拒绝未经身份验证的请求, 包含id
+# authorization:
+#   require_authentication: true
+
  # jwt 需要许可证
 authentication:
   router:
     jwt:
       jwks: # This key is required.
-        - url: https://dev-zzp5enui.us.auth0.com/.well-known/jwks.json
+        - url: file:///Users/maxiang/Documents/muse/cms/jwks.json
           issuer: muse
+          algorithms: [HS256]
           headers: # optional list of static headers added to the HTTP request to the JWKS URL
             - name: User-Agent
               value: router
@@ -24,6 +30,13 @@ authentication:
         - type: header
           name: X-Authorization
           value_prefix: Bearer
+
+# 通过 jwt的 id 查询用户，返回角色和权限
+# coprocessor:
+#   url: http://127.0.0.1:4005
+#   router:
+#     request:
+#       context: true
 
 headers:
   all: # Header rules for all subgraphs
@@ -38,3 +51,7 @@ supergraph:
   # 查询规划器池 提高查询性能
   query_planning:
     experimental_parallelism: auto
+    # 添加redis，提高性能
+    # cache:
+    #   redis: 
+    #     urls: ["redis://..."] 
