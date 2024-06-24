@@ -1,6 +1,8 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 
+import { schema } from "./schemaTypes/index.mjs";
+
 const typeDefs = `#graphql
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
 
@@ -45,3 +47,9 @@ const { url } = await startStandaloneServer(server, {
 });
 
 console.log(`🚀  Sanity Server ready at: ${url}`);
+
+console.log("schema: ", schema);
+
+const post = schema.get('post')
+
+console.log("post: ", post);

@@ -2,10 +2,9 @@
   "name": "sanity-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.cjs",
   "scripts": {
-    "compile": "tsc",
-    "start": "npm run compile && node ./dist/index.js"
+    "start": "node ./src/index.mjs"
   },
   "keywords": [],
   "author": "",
@@ -13,10 +12,10 @@
   "type": "module",
   "dependencies": {
     "@apollo/server": "^4.10.4",
+    "@sanity/schema": "^3.47.1",
     "graphql": "^16.9.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
-    "typescript": "^5.5.2"
+    "@types/node": "^20.14.8"
   }
 }
