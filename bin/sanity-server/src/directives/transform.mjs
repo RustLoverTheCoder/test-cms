@@ -10,6 +10,7 @@ export function transformDirective(directiveName) {
           const { resolve = defaultFieldResolver } = fieldConfig;
 
           fieldConfig.resolve = async function (source, args, context, info) {
+            console.log("info.variableValues", info.variableValues);
             let result = await resolve(source, args, context, info);
             const fieldNode = info.fieldNodes[0];
             const directive = fieldNode.directives?.find(
@@ -28,11 +29,11 @@ export function transformDirective(directiveName) {
                 : null;
               if (heightValue || widthValue) {
                 const url = new URL(result);
-                if (widthValue !== undefined) {
+                if (!!widthValue) {
                   url.searchParams.set("w", widthValue);
                 }
-                if (heightValue !== undefined) {
-                  url.searchParams.set("h", widthValue);
+                if (!!heightValue) {
+                  url.searchParams.set("h", heightValue);
                 }
                 return url;
               }
