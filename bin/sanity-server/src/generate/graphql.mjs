@@ -5,7 +5,7 @@ const convertFieldType = (field) => {
     case "slug":
       return "String";
     case "image":
-      return "Image";
+      return "String";
     case "array":
       return `[${field.of.map((ofType) => convertFieldType(ofType)).join(", ")}]`;
     case "reference":
@@ -23,15 +23,15 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
   console.log("typeNames", typeNames);
 
-  const hasImageType = typeNames.some((type) => type === "image");
-  if (hasImageType) {
-    typeDefs.push(`
-        type Image {
-          asset: String
-          hotspot: Boolean
-        }
-      `);
-  }
+  // const hasImageType = typeNames.some((type) => type === "image");
+  // if (hasImageType) {
+  //   typeDefs.push(`
+  //       type Image {
+  //         asset: String
+  //         hotspot: Boolean
+  //       }
+  //     `);
+  // }
 
   const queryFields = [];
 
@@ -46,17 +46,34 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
       typeDefs.push(`
             type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} {
+              id: ID
               ${fields}
             }
           `);
 
+      // list
+      const listName = `${type.name}s`;
       queryFields.push(
-        `${type.name}: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
+        `${listName}: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
       );
 
-      resolvers.Query[type.name] = async () => {
+      resolvers.Query[`${listName}`] = async () => {
         // This is a mock resolver, replace with actual data fetching logic
         return [];
+      };
+
+      // find type by id
+      const findName = `find_${type.name}_by_id`;
+      queryFields.push(
+        `${findName}(id: ID): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
+      );
+      resolvers.Query[`${findName}`] = async (id) => {
+        console.log("id", id);
+        return {
+          id: "1234",
+          image:
+            "https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.png",
+        };
       };
     }
   });

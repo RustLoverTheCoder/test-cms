@@ -30,13 +30,6 @@ struct Size {
 
 #[Object]
 impl Query {
-    async fn get_crop_url(&self, #[graphql(key)] id: ID, size: Size) -> Content {
-        Content {
-            id,
-            crop_url: Some(format!("oss?w={}&h={}", size.w, size.h)),
-        }
-    }
-
     #[graphql(entity)]
     async fn find_content_by_id(&self, #[graphql(key)] id: ID) -> Content {
         println!("transform id: {id:?}");

@@ -1,3 +1,4 @@
+import { makeExecutableSchema } from "@graphql-tools/schema";
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 
@@ -7,7 +8,14 @@ import { schema, schemaTypes } from "./schemaTypes/index.mjs";
 import { generateTypeDefsAndResolvers } from "./generate/graphql.mjs";
 import { generateMongooseModels } from "./generate/db.mjs";
 
+import { transformDirective } from "./directives/transform.mjs";
+
 const MONGODB_URI = "mongodb://admin:admin@localhost:27017";
+
+// 定义 directive
+
+const { transformDirectiveTypeDefs, transformDirectiveTransformer } =
+  transformDirective("transform");
 
 /*
   根据 schema 生成 typeDefs 和 resolvers
@@ -17,14 +25,20 @@ const { typeDefs, resolvers } = generateTypeDefsAndResolvers(
   schema,
   schemaTypes
 );
-console.log("typeDefs", typeDefs);
-console.log("resolvers", resolvers);
+
+let graphqlSchema = makeExecutableSchema({
+  typeDefs: [transformDirectiveTypeDefs, typeDefs],
+  resolvers,
+});
+
+graphqlSchema = transformDirectiveTransformer(graphqlSchema)
+// console.log("graphqlSchema", graphqlSchema);
 
 /*
   根据 schema 生成 mongodb model
 */
 const models = generateMongooseModels(schema, schemaTypes);
-console.log("models", models);
+// console.log("models", models);
 
 const createSampleData = async () => {
   try {
@@ -54,8 +68,8 @@ const createSampleData = async () => {
 };
 
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema: graphqlSchema,
+  context: ({ req }) => ({ req }),
 });
 
 mongoose

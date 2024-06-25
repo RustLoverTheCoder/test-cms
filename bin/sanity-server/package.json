@@ -12,6 +12,8 @@
   "type": "module",
   "dependencies": {
     "@apollo/server": "^4.10.4",
+    "@graphql-tools/schema": "^10.0.4",
+    "@graphql-tools/utils": "^10.2.2",
     "@sanity/schema": "^3.47.1",
     "graphql": "^16.9.0",
     "mongoose": "^8.4.3"
