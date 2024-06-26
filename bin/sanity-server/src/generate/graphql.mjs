@@ -93,16 +93,23 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       // list
       const listName = `${type.name}s`;
       queryFields.push(
-        `${listName}: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
+        `${listName}(offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
       );
 
-      resolvers.Query[`${listName}`] = async () => {
+      resolvers.Query[`${listName}`] = async (_, { offset, limit }) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
         references.forEach((ref) => {
           query = query.populate(ref);
         });
+        if (!!offset) {
+          query.skip(offset);
+        }
+        if (!!limit) {
+          query.limit(limit);
+        }
+
         return query || [];
       };
 
