@@ -6,7 +6,6 @@ import mongoose from "mongoose";
 
 import { schema, schemaTypes } from "./schemaTypes/index.mjs";
 import { generateTypeDefsAndResolvers } from "./generate/graphql.mjs";
-import { generateMongooseModels } from "./generate/db.mjs";
 
 import { transformDirective } from "./directives/transform.mjs";
 
@@ -35,8 +34,11 @@ let graphqlSchema = makeExecutableSchema({
   resolvers: {
     Query: {
       ...resolvers.Query,
-      ...SearchQuery
-    }
+      ...SearchQuery,
+    },
+    Mutation: {
+      ...resolvers.Mutation,
+    },
   },
 });
 
@@ -46,35 +48,34 @@ graphqlSchema = transformDirectiveTransformer(graphqlSchema);
 /*
   根据 schema 生成 mongodb model
 */
-const models = generateMongooseModels(schema, schemaTypes);
 // console.log("models", models);
 
-const createSampleData = async () => {
-  try {
-    const Author = models.Author;
-    const Post = models.Post;
+// const createSampleData = async () => {
+//   try {
+//     const Author = models.Author;
+//     const Post = models.Post;
 
-    const author = new Author({
-      name: "John Doe",
-      slug: "john-doe",
-      image: "https://example.com/image.jpg",
-    });
+//     const author = new Author({
+//       name: "John Doe",
+//       slug: "john-doe",
+//       image: "https://example.com/image.jpg",
+//     });
 
-    await author.save();
+//     await author.save();
 
-    const post = new Post({
-      title: "Sample Post",
-      slug: "sample-post",
-      author: author._id,
-    });
+//     const post = new Post({
+//       title: "Sample Post",
+//       slug: "sample-post",
+//       author: author._id,
+//     });
 
-    await post.save();
+//     await post.save();
 
-    console.log("Sample data created successfully!");
-  } catch (error) {
-    console.error("Error creating sample data:", error);
-  }
-};
+//     console.log("Sample data created successfully!");
+//   } catch (error) {
+//     console.error("Error creating sample data:", error);
+//   }
+// };
 
 const server = new ApolloServer({
   schema: graphqlSchema,
@@ -85,7 +86,6 @@ mongoose
   .connect(MONGODB_URI)
   .then(async () => {
     console.log("MongoDB Connected Successfully");
-    await createSampleData();
     return startStandaloneServer(server, {
       listen: { port: 4006 },
     });
