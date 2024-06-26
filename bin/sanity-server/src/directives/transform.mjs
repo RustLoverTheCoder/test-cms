@@ -1,10 +1,13 @@
 import { defaultFieldResolver } from "graphql";
 import { MapperKind, mapSchema } from "@graphql-tools/utils";
 
-export function transformDirective(directiveName) {
+export function ExtendDirective() {
   return {
-    transformDirectiveTypeDefs: `directive @${directiveName}(width: Int, height: Int) on FIELD`,
-    transformDirectiveTransformer: (schema) => {
+    DirectiveTypeDefs: `
+      directive @transform(width: Int, height: Int) on FIELD \n 
+      directive @gravity on FIELD \n 
+    `,
+    DirectiveTransformer: (schema) => {
       return mapSchema(schema, {
         [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
           const { resolve = defaultFieldResolver } = fieldConfig;
@@ -13,7 +16,7 @@ export function transformDirective(directiveName) {
             console.log("info.variableValues", info.variableValues);
             const fieldNode = info.fieldNodes[0];
             const directive = fieldNode.directives?.find(
-              (directive) => directive.name.value === directiveName
+              (directive) => directive.name.value === "transform"
             );
             if (directive) {
               const widthArg = directive.arguments?.find(
@@ -37,10 +40,20 @@ export function transformDirective(directiveName) {
                 if (!!heightValue) {
                   url.searchParams.set("h", heightValue);
                 }
-                return url;
+                result = url;
               }
-              return result;
             }
+
+            const gravityDirective = fieldNode.directives?.find(
+              (directive) => directive.name.value === "gravity"
+            );
+
+            if (gravityDirective) {
+              const url = new URL(result);
+              url.searchParams.set("g", "face");
+              result = url;
+            }
+
             return result;
           };
 
