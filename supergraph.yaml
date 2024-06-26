@@ -2,7 +2,7 @@ federation_version: 2
 subgraphs:
   content:
     schema:
-      subgraph_url: http://localhost:4001
+      subgraph_url: http://localhost:4006
   transform:
     schema:
       subgraph_url: http://localhost:4002

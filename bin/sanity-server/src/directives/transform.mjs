@@ -1,5 +1,5 @@
-import { defaultFieldResolver, GraphQLSchema } from "graphql";
-import { getDirective, MapperKind, mapSchema } from "@graphql-tools/utils";
+import { defaultFieldResolver } from "graphql";
+import { MapperKind, mapSchema } from "@graphql-tools/utils";
 
 export function transformDirective(directiveName) {
   return {

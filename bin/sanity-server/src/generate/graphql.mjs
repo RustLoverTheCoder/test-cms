@@ -67,10 +67,10 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       queryFields.push(
         `${findName}(id: ID): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
       );
-      resolvers.Query[`${findName}`] = async (id) => {
+      resolvers.Query[`${findName}`] = async (_parent, { id }) => {
         console.log("id", id);
         return {
-          id: "1234",
+          id,
           image:
             "https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.png",
         };

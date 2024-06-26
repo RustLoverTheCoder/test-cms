@@ -10,10 +10,11 @@ import { generateMongooseModels } from "./generate/db.mjs";
 
 import { transformDirective } from "./directives/transform.mjs";
 
+import { SearchExtend } from "./extend/search.mjs";
+
 const MONGODB_URI = "mongodb://admin:admin@localhost:27017";
 
 // 定义 directive
-
 const { transformDirectiveTypeDefs, transformDirectiveTransformer } =
   transformDirective("transform");
 
@@ -26,12 +27,20 @@ const { typeDefs, resolvers } = generateTypeDefsAndResolvers(
   schemaTypes
 );
 
+// extend
+const { SearchTypeDefs, SearchQuery } = SearchExtend();
+
 let graphqlSchema = makeExecutableSchema({
-  typeDefs: [transformDirectiveTypeDefs, typeDefs],
-  resolvers,
+  typeDefs: [transformDirectiveTypeDefs, typeDefs, SearchTypeDefs],
+  resolvers: {
+    Query: {
+      ...resolvers.Query,
+      ...SearchQuery
+    }
+  },
 });
 
-graphqlSchema = transformDirectiveTransformer(graphqlSchema)
+graphqlSchema = transformDirectiveTransformer(graphqlSchema);
 // console.log("graphqlSchema", graphqlSchema);
 
 /*
