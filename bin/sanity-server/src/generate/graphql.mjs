@@ -66,15 +66,36 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
       const inputFields = type.fields
         .map((field) => {
-          const fieldType = convertGraphqlInputFieldType(field);
-          return `${field.name}: ${fieldType}`;
+          if (field.type !== "array") {
+            const fieldType = convertGraphqlInputFieldType(field);
+            return `${field.name}: ${fieldType}`;
+          }
         })
         .join("\n    ");
 
       const references = [];
       type.fields.forEach((field) => {
         if (field.type == "reference") {
-          references.push(field.to.type);
+          references.push({
+            path: field.to.type,
+          });
+        }
+        if (
+          field.type === "array" &&
+          field.of.length > 0 &&
+          field.of.some((o) => o.type === "reference")
+        ) {
+          field.of.forEach((o) => {
+            if (o.type === "reference") {
+              references.push({
+                path: `${o.to.type}s`,
+                populate: {
+                  path: type.name,
+                  model: type.name.charAt(0).toUpperCase() + type.name.slice(1),
+                },
+              });
+            }
+          });
         }
       });
 
@@ -96,7 +117,15 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         `${listName}(offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
       );
 
-      resolvers.Query[`${listName}`] = async (_, { offset, limit }) => {
+      resolvers.Query[`${listName}`] = async (
+        _,
+        { offset, limit },
+        context
+      ) => {
+        if (context.nthIndex !== undefined) {
+          limit = 1;
+          offset = context.nthIndex;
+        }
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
@@ -121,11 +150,15 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       resolvers.Query[`${findName}`] = async (_parent, { id }) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
+
         let query = Model.findById(id);
         references.forEach((ref) => {
           query = query.populate(ref);
         });
-        return query;
+
+        const res = await query;
+        console.log("res", res);
+        return res;
       };
 
       // mutation
@@ -141,6 +174,24 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
           ...input,
         });
         await model.save();
+        // post 关联 author, 需要更新
+        let typeReference = type.fields.find(
+          (field) => field.type === "reference"
+        );
+        if (!!typeReference) {
+          const to = typeReference.to.type;
+          const referenceModel =
+            models?.[to.charAt(0).toUpperCase() + to.slice(1)];
+          const id = input?.[to];
+          const modelId = model._id.toString();
+          await referenceModel.findByIdAndUpdate(
+            id,
+            {
+              $push: { [`${type.name.toLowerCase()}s`]: modelId },
+            },
+            { new: true }
+          );
+        }
 
         let query = model;
         references.forEach((ref) => {
@@ -161,6 +212,8 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         ${mutaionFields.join("\n  ")}
       }
     `);
+
+  console.log("resolvers", resolvers);
 
   return { typeDefs: typeDefs.join("\n"), resolvers };
 };

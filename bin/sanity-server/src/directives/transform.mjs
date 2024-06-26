@@ -6,14 +6,16 @@ export function ExtendDirective() {
     DirectiveTypeDefs: `
       directive @transform(width: Int, height: Int) on FIELD \n 
       directive @gravity on FIELD \n 
+      directive @nth(index: Int!) on FIELD \n 
     `,
     DirectiveTransformer: (schema) => {
       return mapSchema(schema, {
         [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
           const { resolve = defaultFieldResolver } = fieldConfig;
           fieldConfig.resolve = async function (source, args, context, info) {
+            // context.nthIndex = info.variableValues?.index || null;
+            // console.log("info", info.fieldNodes[0].directives);
             let result = await resolve(source, args, context, info);
-            console.log("info.variableValues", info.variableValues);
             const fieldNode = info.fieldNodes[0];
             const directive = fieldNode.directives?.find(
               (directive) => directive.name.value === "transform"

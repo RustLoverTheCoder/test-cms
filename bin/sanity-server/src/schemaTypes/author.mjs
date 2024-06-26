@@ -24,12 +24,12 @@ export const Author = {
       options: {
         hotspot: true,
       },
-    }
-  ],
-  preview: {
-    select: {
-      title: "name",
-      media: "image",
     },
-  },
+    {
+      name: "posts",
+      title: "Posts",
+      type: "array",
+      of: [{ type: "reference", to: { type: "post" } }],
+    },
+  ],
 };

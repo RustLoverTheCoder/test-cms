@@ -9,7 +9,24 @@ const convertFieldTypeToMongoose = (field) => {
     case "image":
       return { type: String }; // You might want to store just the URL or a reference to a file
     case "array":
-      return [String]; // Simplified, you may need a more complex handling based on `of`
+      if (field.of && field.of.length > 0) {
+        // 处理数组内部的类型
+        const arrayType = field.of[0];
+        if (arrayType.type === "reference") {
+          return [
+            {
+              type: mongoose.Schema.Types.ObjectId,
+              ref:
+                arrayType.to.type.charAt(0).toUpperCase() +
+                arrayType.to.type.slice(1),
+            },
+          ];
+        } else {
+          return [convertFieldTypeToMongoose(arrayType)];
+        }
+      } else {
+        return [String]; // 默认返回字符串数组
+      }
     case "reference":
       return {
         type: mongoose.Schema.Types.ObjectId,
