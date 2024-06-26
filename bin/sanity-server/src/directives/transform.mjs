@@ -8,10 +8,9 @@ export function transformDirective(directiveName) {
       return mapSchema(schema, {
         [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
           const { resolve = defaultFieldResolver } = fieldConfig;
-
           fieldConfig.resolve = async function (source, args, context, info) {
-            console.log("info.variableValues", info.variableValues);
             let result = await resolve(source, args, context, info);
+            console.log("info.variableValues", info.variableValues);
             const fieldNode = info.fieldNodes[0];
             const directive = fieldNode.directives?.find(
               (directive) => directive.name.value === directiveName
@@ -20,12 +19,15 @@ export function transformDirective(directiveName) {
               const widthArg = directive.arguments?.find(
                 (arg) => arg.name.value === "width"
               );
-              const widthValue = widthArg ? info.variableValues?.width : null;
+
+              const widthValue = widthArg
+                ? info.variableValues?.[widthArg.value.name.value]
+                : null;
               const heightArg = directive.arguments?.find(
                 (arg) => arg.name.value === "height"
               );
               const heightValue = heightArg
-                ? info.variableValues?.height
+                ? info.variableValues?.[heightArg.value.name.value]
                 : null;
               if (heightValue || widthValue) {
                 const url = new URL(result);
