@@ -98,12 +98,8 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       resolvers.Query[`${listName}`] = async (
         _,
         { offset, limit },
-        context
+        _context
       ) => {
-        if (context.nthIndex !== undefined) {
-          limit = 1;
-          offset = context.nthIndex;
-        }
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
@@ -200,7 +196,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
             let query = Model.find({ [type.name]: parent.id });
 
             if (Number(context.nthIndex) > -1) {
-              query.limit(1).skip(Number(context.nthIndex));
+              query.limit(1).skip(Number(context.nthIndex) - 1);
             }
 
             if (!!offset) {
