@@ -13,22 +13,35 @@ export function ExtendDirective() {
         [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
           const { resolve = defaultFieldResolver } = fieldConfig;
           fieldConfig.resolve = async function (source, args, context, info) {
-            // context.nthIndex = info.variableValues?.index || null;
-            // console.log("info", info.fieldNodes[0].directives);
-            let result = await resolve(source, args, context, info);
             const fieldNode = info.fieldNodes[0];
-            const directive = fieldNode.directives?.find(
+            const nthDirective = fieldNode.directives?.find(
+              (directive) => directive.name.value === "nth"
+            );
+
+            if (nthDirective) {
+              const indexArg = nthDirective.arguments?.find(
+                (arg) => arg.name.value === "index"
+              );
+              const indexValue = indexArg
+                ? info.variableValues?.[indexArg.value.name.value]
+                : null;
+              if (indexValue) {
+                context.nthIndex = indexValue;
+              }
+            }
+            let result = await resolve(source, args, context, info);
+            const transformDirective = fieldNode.directives?.find(
               (directive) => directive.name.value === "transform"
             );
-            if (directive) {
-              const widthArg = directive.arguments?.find(
+            if (transformDirective) {
+              const widthArg = transformDirective.arguments?.find(
                 (arg) => arg.name.value === "width"
               );
 
               const widthValue = widthArg
                 ? info.variableValues?.[widthArg.value.name.value]
                 : null;
-              const heightArg = directive.arguments?.find(
+              const heightArg = transformDirective.arguments?.find(
                 (arg) => arg.name.value === "height"
               );
               const heightValue = heightArg

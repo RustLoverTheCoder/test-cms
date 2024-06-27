@@ -174,8 +174,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         if (field.type == "reference") {
           resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
             field.to.type
-          ] = async (parent, input) => {
-            console.log("input1", input);
+          ] = async (parent, _input) => {
             const Model =
               models?.[
                 field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)
@@ -190,7 +189,8 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         ) {
           resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
             field.of[0].to.type + "s"
-          ] = async (parent, { offset, limit }) => {
+          ] = async (parent, { offset, limit }, context) => {
+            console.log("context", context);
             const Model =
               models?.[
                 field.of[0].to.type.charAt(0).toUpperCase() +
@@ -198,6 +198,10 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
               ];
 
             let query = Model.find({ [type.name]: parent.id });
+
+            if (Number(context.nthIndex) > -1) {
+              query.limit(1).skip(Number(context.nthIndex));
+            }
 
             if (!!offset) {
               query.skip(offset);
