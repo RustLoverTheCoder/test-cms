@@ -74,11 +74,45 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         .join("\n    ");
 
       const references = [];
+      // 这里可以优化成递归
       type.fields.forEach((field) => {
         if (field.type == "reference") {
-          references.push({
-            path: field.to.type,
-          });
+          console.log("field.to.type", field.to.type);
+          // 还要把 field.to.type 的 关联找到
+          let children = "";
+          const childrenType = schemaTypes.find(
+            (type) => type.type === "document" && type.name === field.to.type
+          );
+          if (childrenType) {
+            // 找到type的
+            childrenType.fields.forEach((childrenField) => {
+              if (childrenField.type == "reference") {
+                references.push({
+                  path: field.to.type,
+                  populate: {
+                    path: childrenField.to.type,
+                  },
+                });
+              }
+
+              if (
+                childrenField.type === "array" &&
+                childrenField.of.length > 0 &&
+                childrenField.of.some((o) => o.type === "reference")
+              ) {
+                references.push({
+                  path: field.to.type,
+                  populate: {
+                    path: childrenField.of?.[0].to.type + "s",
+                  },
+                });
+              }
+            });
+          } else {
+            references.push({
+              path: field.to.type,
+            });
+          }
         }
         if (
           field.type === "array" &&
@@ -152,6 +186,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
 
         let query = Model.findById(id);
+        console.log("references", references);
         references.forEach((ref) => {
           query = query.populate(ref);
         });
@@ -200,6 +235,41 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
         return query;
       };
+
+      // 新增字段解析 比如 Author 要实现 对 posts 的解析
+      // resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};
+      // type.fields.forEach((field) => {
+      //   if (field.type == "reference") {
+      //     resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
+      //       field.to.type
+      //     ] = async (parent) => {
+      //       const Model =
+      //         models?.[
+      //           field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)
+      //         ];
+      //       return await Model.findById(parent[field.to.type]);
+      //     };
+      //   }
+      //   if (
+      //     field.type === "array" &&
+      //     field.of.length > 0 &&
+      //     field.of.some((o) => o.type === "reference")
+      //   ) {
+      //     resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
+      //       field.of[0].to.type + "s"
+      //     ] = async (parent) => {
+      //       const Model =
+      //         models?.[
+      //           field.of[0].to.type.charAt(0).toUpperCase() +
+      //             field.of[0].to.type.slice(1)
+      //         ];
+
+      //       return await Model.find({ [type.name]: parent.id });
+      //     };
+      //   }
+      // });
+
+      // console.log("resolvers", resolvers);
     }
   });
 
@@ -213,7 +283,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       }
     `);
 
-  console.log("resolvers", resolvers);
+  // console.log("resolvers", resolvers);
 
   return { typeDefs: typeDefs.join("\n"), resolvers };
 };
