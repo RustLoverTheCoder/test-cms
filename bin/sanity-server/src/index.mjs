@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import { schema, schemaTypes } from "./schemaTypes/index.mjs";
 import { generateTypeDefsAndResolvers } from "./generate/graphql.mjs";
 
-import { ExtendDirective } from "./directives/transform.mjs";
+import { ExtendDirective } from "./directives/directive.mjs";
 
 import { SearchExtend } from "./extend/search.mjs";
 
