@@ -60,7 +60,11 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       const fields = type.fields
         .map((field) => {
           const fieldType = convertGraphqlFieldType(field);
-          return `${field.name}: ${fieldType}`;
+          let key = field.name;
+          if (field.type === "array") {
+            key = `${field.name}(offset: Int, limit: Int)`;
+          }
+          return `${key}: ${fieldType}`;
         })
         .join("\n    ");
 
@@ -72,66 +76,6 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
           }
         })
         .join("\n    ");
-
-      const references = [];
-      // 这里可以优化成递归
-      type.fields.forEach((field) => {
-        if (field.type == "reference") {
-          console.log("field.to.type", field.to.type);
-          // 还要把 field.to.type 的 关联找到
-          let children = "";
-          const childrenType = schemaTypes.find(
-            (type) => type.type === "document" && type.name === field.to.type
-          );
-          if (childrenType) {
-            // 找到type的
-            childrenType.fields.forEach((childrenField) => {
-              if (childrenField.type == "reference") {
-                references.push({
-                  path: field.to.type,
-                  populate: {
-                    path: childrenField.to.type,
-                  },
-                });
-              }
-
-              if (
-                childrenField.type === "array" &&
-                childrenField.of.length > 0 &&
-                childrenField.of.some((o) => o.type === "reference")
-              ) {
-                references.push({
-                  path: field.to.type,
-                  populate: {
-                    path: childrenField.of?.[0].to.type + "s",
-                  },
-                });
-              }
-            });
-          } else {
-            references.push({
-              path: field.to.type,
-            });
-          }
-        }
-        if (
-          field.type === "array" &&
-          field.of.length > 0 &&
-          field.of.some((o) => o.type === "reference")
-        ) {
-          field.of.forEach((o) => {
-            if (o.type === "reference") {
-              references.push({
-                path: `${o.to.type}s`,
-                populate: {
-                  path: type.name,
-                  model: type.name.charAt(0).toUpperCase() + type.name.slice(1),
-                },
-              });
-            }
-          });
-        }
-      });
 
       typeDefs.push(`
             input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
@@ -163,9 +107,6 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
-        references.forEach((ref) => {
-          query = query.populate(ref);
-        });
         if (!!offset) {
           query.skip(offset);
         }
@@ -181,19 +122,13 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       queryFields.push(
         `${findName}(id: ID): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
       );
-      resolvers.Query[`${findName}`] = async (_parent, { id }) => {
+      resolvers.Query[`${findName}`] = async (_parent, input) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
 
-        let query = Model.findById(id);
-        console.log("references", references);
-        references.forEach((ref) => {
-          query = query.populate(ref);
-        });
+        let query = Model.findById(input.id);
 
-        const res = await query;
-        console.log("res", res);
-        return res;
+        return query;
       };
 
       // mutation
@@ -229,45 +164,42 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         }
 
         let query = model;
-        references.forEach((ref) => {
-          query = query.populate(ref);
-        });
 
         return query;
       };
 
       // 新增字段解析 比如 Author 要实现 对 posts 的解析
-      // resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};
-      // type.fields.forEach((field) => {
-      //   if (field.type == "reference") {
-      //     resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
-      //       field.to.type
-      //     ] = async (parent) => {
-      //       const Model =
-      //         models?.[
-      //           field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)
-      //         ];
-      //       return await Model.findById(parent[field.to.type]);
-      //     };
-      //   }
-      //   if (
-      //     field.type === "array" &&
-      //     field.of.length > 0 &&
-      //     field.of.some((o) => o.type === "reference")
-      //   ) {
-      //     resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
-      //       field.of[0].to.type + "s"
-      //     ] = async (parent) => {
-      //       const Model =
-      //         models?.[
-      //           field.of[0].to.type.charAt(0).toUpperCase() +
-      //             field.of[0].to.type.slice(1)
-      //         ];
+      resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};
+      type.fields.forEach((field) => {
+        if (field.type == "reference") {
+          resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
+            field.to.type
+          ] = async (parent) => {
+            const Model =
+              models?.[
+                field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)
+              ];
+            return await Model.findById(parent[field.to.type]);
+          };
+        }
+        if (
+          field.type === "array" &&
+          field.of.length > 0 &&
+          field.of.some((o) => o.type === "reference")
+        ) {
+          resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
+            field.of[0].to.type + "s"
+          ] = async (parent) => {
+            const Model =
+              models?.[
+                field.of[0].to.type.charAt(0).toUpperCase() +
+                  field.of[0].to.type.slice(1)
+              ];
 
-      //       return await Model.find({ [type.name]: parent.id });
-      //     };
-      //   }
-      // });
+            return await Model.find({ [type.name]: parent.id });
+          };
+        }
+      });
 
       // console.log("resolvers", resolvers);
     }

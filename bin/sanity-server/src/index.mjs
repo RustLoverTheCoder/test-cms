@@ -38,6 +38,7 @@ let graphqlSchema = makeExecutableSchema({
     Mutation: {
       ...resolvers.Mutation,
     },
+    ...resolvers
   },
 });
 
