@@ -7,6 +7,7 @@ export function ExtendDirective() {
       directive @transform(width: Int, height: Int) on FIELD \n 
       directive @gravity on FIELD \n 
       directive @nth(index: Int!) on FIELD \n 
+      directive @watermark(content: String!) on FIELD \n 
     `,
     DirectiveTransformer: (schema) => {
       return mapSchema(schema, {
@@ -66,6 +67,24 @@ export function ExtendDirective() {
             if (gravityDirective) {
               const url = new URL(result);
               url.searchParams.set("g", "face");
+              result = url;
+            }
+
+            const watermarkDirective = fieldNode.directives?.find(
+              (directive) => directive.name.value === "watermark"
+            );
+
+            if (watermarkDirective) {
+              const watermarkArg = watermarkDirective.arguments?.find(
+                (arg) => arg.name.value === "content"
+              );
+
+              const watermarkValue = watermarkArg
+                ? info.variableValues?.[watermarkArg.value.name.value]
+                : null;
+
+              const url = new URL(result);
+              url.searchParams.set("watermark", watermarkValue);
               result = url;
             }
 
