@@ -1,6 +1,8 @@
-import { makeExecutableSchema } from "@graphql-tools/schema";
+import { makeExecutableSchema, mergeSchemas } from "@graphql-tools/schema";
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
+import { buildSubgraphSchema } from "@apollo/subgraph";
+import gql from "graphql-tag";
 
 import mongoose from "mongoose";
 
@@ -20,16 +22,35 @@ const { DirectiveTypeDefs, DirectiveTransformer } = ExtendDirective();
   根据 schema 生成 typeDefs 和 resolvers
 */
 
-const { typeDefs, resolvers } = generateTypeDefsAndResolvers(
-  schema,
-  schemaTypes
-);
+const { typeDefs, resolvers, queryFields, mutaionFields } =
+  generateTypeDefsAndResolvers(schema, schemaTypes);
 
 // extend
-const { SearchTypeDefs, SearchQuery } = SearchExtend();
+const { SearchTypeDefs, SearchQuery, SearchQueryFields } = SearchExtend();
 
-let graphqlSchema = makeExecutableSchema({
-  typeDefs: [DirectiveTypeDefs, typeDefs, SearchTypeDefs],
+const federationTypeDefs = gql`
+  extend schema
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.0"
+      import: ["@key", "@shareable"]
+    )
+
+  ${[DirectiveTypeDefs, typeDefs, SearchTypeDefs].join("\n    ")}
+
+        type Query {
+        ${queryFields.join("\n  ")}
+
+        ${SearchQueryFields.join("\n  ")}
+      }
+
+      type Mutation {
+        ${mutaionFields.join("\n  ")}
+      }
+`;
+
+
+let graphqlSchema = buildSubgraphSchema({
+  typeDefs: federationTypeDefs,
   resolvers: {
     Query: {
       ...resolvers.Query,
@@ -38,7 +59,7 @@ let graphqlSchema = makeExecutableSchema({
     Mutation: {
       ...resolvers.Mutation,
     },
-    ...resolvers
+    ...resolvers,
   },
 });
 

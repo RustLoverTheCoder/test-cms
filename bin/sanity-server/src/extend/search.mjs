@@ -24,10 +24,6 @@ export const SearchExtend = () => {
             filter: FilterType
             limit: Int
         }
-
-        type Query {
-            searchCollectionPoints(input: SearchInput): [String]
-        }
     `,
     SearchQuery: {
       searchCollectionPoints(_parent, { input }) {
@@ -39,5 +35,6 @@ export const SearchExtend = () => {
         ];
       },
     },
+    SearchQueryFields: ["searchCollectionPoints(input: SearchInput): [String]"],
   };
 };

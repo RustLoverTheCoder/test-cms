@@ -3,15 +3,15 @@ subgraphs:
   content:
     schema:
       subgraph_url: http://localhost:4006
-  transform:
-    schema:
-      subgraph_url: http://localhost:4002
-  ai:
-    schema:
-      subgraph_url: http://localhost:4003
-  relation:
-    schema:
-      subgraph_url: http://localhost:4004
-  account:
-    schema:
-      subgraph_url: http://localhost:4005
+  # transform:
+  #   schema:
+  #     subgraph_url: http://localhost:4002
+  # ai:
+  #   schema:
+  #     subgraph_url: http://localhost:4003
+  # relation:
+  #   schema:
+  #     subgraph_url: http://localhost:4004
+  # account:
+  #   schema:
+  #     subgraph_url: http://localhost:4005

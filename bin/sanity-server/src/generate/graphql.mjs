@@ -215,17 +215,22 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
     }
   });
 
-  typeDefs.push(`
-      type Query {
-        ${queryFields.join("\n  ")}
-      }
+  // typeDefs.push(`
+  //     type Query {
+  //       ${queryFields.join("\n  ")}
+  //     }
 
-      type Mutation {
-        ${mutaionFields.join("\n  ")}
-      }
-    `);
+  //     type Mutation {
+  //       ${mutaionFields.join("\n  ")}
+  //     }
+  //   `);
 
   // console.log("resolvers", resolvers);
 
-  return { typeDefs: typeDefs.join("\n"), resolvers };
+  return {
+    typeDefs: typeDefs.join("\n"),
+    resolvers,
+    queryFields,
+    mutaionFields,
+  };
 };
