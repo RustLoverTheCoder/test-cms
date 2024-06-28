@@ -1,15 +1,21 @@
 schema
   @link(url: "https://specs.apollo.dev/link/v1.0")
-  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+  @link(url: "https://specs.apollo.dev/join/v0.5", for: EXECUTION)
+  @link(url: "https://specs.apollo.dev/authenticated/v0.1", for: SECURITY)
 {
   query: Query
+  mutation: Mutation
 }
 
-directive @is_admin on FIELD
+directive @authenticated on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
+
+directive @gravity on FIELD
+
+directive @join__directive(graphs: [join__Graph!], name: String!, args: join__DirectiveArguments) repeatable on SCHEMA | OBJECT | INTERFACE | FIELD_DEFINITION
 
 directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
 
-directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean, overrideLabel: String, contextArguments: [join__ContextArgument!]) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
 directive @join__graph(name: String!, url: String!) on ENUM_VALUE
 
@@ -21,40 +27,58 @@ directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on
 
 directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
 
-directive @lowercase on FIELD
+directive @nth(index: Int!) on FIELD
 
-type Account
-  @join__type(graph: ACCOUNT, key: "id")
+directive @transform(width: Int, height: Int) on FIELD
+
+directive @watermark(content: String!) on FIELD
+
+type Author
+  @join__type(graph: CONTENT)
 {
-  id: ID!
+  id: ID
+  name: String
+  slug: String
+  image: String
+  posts(offset: Int, limit: Int): [Post]
+}
+
+input AuthorInput
+  @join__type(graph: CONTENT)
+{
+  name: String
+  slug: String
+  image: String
+}
+
+input FilterType
+  @join__type(graph: CONTENT)
+{
+  must: [MustInput]
+}
+
+input join__ContextArgument {
   name: String!
-  desc: String!
-  roles: [String!]!
-  permissions: [String!]!
+  type: String!
+  context: String!
+  selection: join__FieldValue!
 }
 
-type Content
-  @join__type(graph: AI, key: "id")
-  @join__type(graph: CONTENT, key: "id")
-  @join__type(graph: RELATION, key: "id")
-  @join__type(graph: TRANSFORM, key: "id")
-{
-  id: ID!
-  tag: [String!]! @join__field(graph: AI)
-  name: String @join__field(graph: CONTENT)
-  reviewCount: Int! @join__field(graph: CONTENT)
-  relationContent: [Content!]! @join__field(graph: RELATION)
-  cropUrl: String @join__field(graph: TRANSFORM)
-}
+scalar join__DirectiveArguments
 
 scalar join__FieldSet
 
+scalar join__FieldValue
+
 enum join__Graph {
-  ACCOUNT @join__graph(name: "account", url: "http://localhost:4005/")
-  AI @join__graph(name: "ai", url: "http://localhost:4003/")
-  CONTENT @join__graph(name: "content", url: "http://localhost:4001/")
-  RELATION @join__graph(name: "relation", url: "http://localhost:4004/")
-  TRANSFORM @join__graph(name: "transform", url: "http://localhost:4002/")
+  CONTENT @join__graph(name: "content", url: "http://localhost:4006/")
+}
+
+input LikeType
+  @join__type(graph: CONTENT)
+{
+  value: String
+  threshold: Float
 }
 
 scalar link__Import
@@ -71,23 +95,58 @@ enum link__Purpose {
   EXECUTION
 }
 
-type Query
-  @join__type(graph: ACCOUNT)
-  @join__type(graph: AI)
+input MatchType
   @join__type(graph: CONTENT)
-  @join__type(graph: RELATION)
-  @join__type(graph: TRANSFORM)
 {
-  account(id: ID!): Account! @join__field(graph: ACCOUNT)
-  accounts: [Account!]! @join__field(graph: ACCOUNT)
-  findTags: [String!]! @join__field(graph: AI)
-  findContentById(id: ID!): Content! @join__field(graph: CONTENT)
-  getCropUrl(id: ID!, size: Size!): Content! @join__field(graph: TRANSFORM)
+  value: String
 }
 
-input Size
-  @join__type(graph: TRANSFORM)
+input MustInput
+  @join__type(graph: CONTENT)
 {
-  w: Int!
-  h: Int!
+  key: String
+  match: MatchType
+  like: LikeType
+}
+
+type Mutation
+  @join__type(graph: CONTENT)
+{
+  create_post(input: PostInput): Post
+  create_author(input: AuthorInput): Author
+}
+
+type Post
+  @join__type(graph: CONTENT)
+  @authenticated
+{
+  id: ID
+  title: String
+  slug: String
+  author: Author
+}
+
+input PostInput
+  @join__type(graph: CONTENT)
+{
+  title: String
+  slug: String
+  author: ID
+}
+
+type Query
+  @join__type(graph: CONTENT)
+{
+  posts(offset: Int, limit: Int): [Post]
+  find_post_by_id(id: ID): Post
+  authors(offset: Int, limit: Int): [Author]
+  find_author_by_id(id: ID): Author
+  searchCollectionPoints(input: SearchInput): [String]
+}
+
+input SearchInput
+  @join__type(graph: CONTENT)
+{
+  filter: FilterType
+  limit: Int
 }

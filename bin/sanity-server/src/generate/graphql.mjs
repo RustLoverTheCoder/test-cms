@@ -77,7 +77,20 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         })
         .join("\n    ");
 
-      typeDefs.push(`
+      // 测试 @authenticated
+      if (type.name.charAt(0).toUpperCase() + type.name.slice(1) === "Post") {
+        typeDefs.push(`
+            input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
+              ${inputFields}
+            }
+
+            type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} @authenticated {
+              id: ID
+              ${fields}
+            }
+          `);
+      } else {
+        typeDefs.push(`
             input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
               ${inputFields}
             }
@@ -87,6 +100,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
               ${fields}
             }
           `);
+      }
 
       // query
       // list

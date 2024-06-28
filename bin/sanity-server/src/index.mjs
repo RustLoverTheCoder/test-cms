@@ -31,8 +31,8 @@ const { SearchTypeDefs, SearchQuery, SearchQueryFields } = SearchExtend();
 const federationTypeDefs = gql`
   extend schema
     @link(
-      url: "https://specs.apollo.dev/federation/v2.0"
-      import: ["@key", "@shareable"]
+      url: "https://specs.apollo.dev/federation/v2.8"
+      import: ["@key", "@shareable", "@authenticated"]
     )
 
   ${[DirectiveTypeDefs, typeDefs, SearchTypeDefs].join("\n    ")}
