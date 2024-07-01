@@ -2,6 +2,7 @@ schema
   @link(url: "https://specs.apollo.dev/link/v1.0")
   @link(url: "https://specs.apollo.dev/join/v0.5", for: EXECUTION)
   @link(url: "https://specs.apollo.dev/authenticated/v0.1", for: SECURITY)
+  @link(url: "https://specs.apollo.dev/requiresScopes/v0.1", for: SECURITY)
 {
   query: Query
   mutation: Mutation
@@ -29,6 +30,8 @@ directive @link(url: String, as: String, for: link__Purpose, import: [link__Impo
 
 directive @nth(index: Int!) on FIELD
 
+directive @requiresScopes(scopes: [[requiresScopes__Scope!]!]!) on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
+
 directive @transform(width: Int, height: Int) on FIELD
 
 directive @watermark(content: String!) on FIELD
@@ -39,7 +42,7 @@ type Author
   id: ID
   name: String
   slug: String
-  image: String
+  image: String @requiresScopes(scopes: [["read:image"]])
   posts(offset: Int, limit: Int): [Post]
 }
 
@@ -117,7 +120,7 @@ type Mutation
 }
 
 type Post
-  @join__type(graph: CONTENT)
+  @join__type(graph: CONTENT, key: "id")
   @authenticated
 {
   id: ID
@@ -143,6 +146,8 @@ type Query
   find_author_by_id(id: ID): Author
   searchCollectionPoints(input: SearchInput): [String]
 }
+
+scalar requiresScopes__Scope
 
 input SearchInput
   @join__type(graph: CONTENT)

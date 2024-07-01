@@ -32,14 +32,12 @@ const federationTypeDefs = gql`
   extend schema
     @link(
       url: "https://specs.apollo.dev/federation/v2.8"
-      import: ["@key", "@shareable", "@authenticated"]
+      import: ["@key", "@shareable", "@authenticated", "@requiresScopes"]
     )
 
   ${[DirectiveTypeDefs, typeDefs, SearchTypeDefs].join("\n    ")}
-
         type Query {
         ${queryFields.join("\n  ")}
-
         ${SearchQueryFields.join("\n  ")}
       }
 
@@ -47,7 +45,6 @@ const federationTypeDefs = gql`
         ${mutaionFields.join("\n  ")}
       }
 `;
-
 
 let graphqlSchema = buildSubgraphSchema({
   typeDefs: federationTypeDefs,

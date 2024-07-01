@@ -11,9 +11,6 @@ dependencies:
   '@apollo/subgraph':
     specifier: ^2.8.1
     version: 2.8.1(graphql@16.9.0)
-  '@graphql-tools/schema':
-    specifier: ^10.0.4
-    version: 10.0.4(graphql@16.9.0)
   '@graphql-tools/utils':
     specifier: ^10.2.2
     version: 10.2.2(graphql@16.9.0)
@@ -248,30 +245,6 @@ packages:
       '@graphql-tools/utils': 9.2.1(graphql@16.9.0)
       graphql: 16.9.0
       tslib: 2.6.3
-    dev: false
-
-  /@graphql-tools/merge@9.0.4(graphql@16.9.0):
-    resolution: {integrity: sha512-MivbDLUQ+4Q8G/Hp/9V72hbn810IJDEZQ57F01sHnlrrijyadibfVhaQfW/pNH+9T/l8ySZpaR/DpL5i+ruZ+g==}
-    engines: {node: '>=16.0.0'}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      '@graphql-tools/utils': 10.2.2(graphql@16.9.0)
-      graphql: 16.9.0
-      tslib: 2.6.3
-    dev: false
-
-  /@graphql-tools/schema@10.0.4(graphql@16.9.0):
-    resolution: {integrity: sha512-HuIwqbKxPaJujox25Ra4qwz0uQzlpsaBOzO6CVfzB/MemZdd+Gib8AIvfhQArK0YIN40aDran/yi+E5Xf0mQww==}
-    engines: {node: '>=16.0.0'}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      '@graphql-tools/merge': 9.0.4(graphql@16.9.0)
-      '@graphql-tools/utils': 10.2.2(graphql@16.9.0)
-      graphql: 16.9.0
-      tslib: 2.6.3
-      value-or-promise: 1.0.12
     dev: false
 
   /@graphql-tools/schema@9.0.19(graphql@16.9.0):

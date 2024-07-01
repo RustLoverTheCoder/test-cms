@@ -6,7 +6,7 @@ const convertGraphqlFieldType = (field) => {
     case "slug":
       return "String";
     case "image":
-      return "String";
+      return `String @requiresScopes(scopes: [["read:image"]])`;
     case "array":
       return `[${field.of.map((ofType) => convertGraphqlFieldType(ofType)).join(", ")}]`;
     case "reference":
@@ -84,7 +84,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
               ${inputFields}
             }
 
-            type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} @authenticated {
+            type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} @authenticated @key(fields: "id") {
               id: ID
               ${fields}
             }
