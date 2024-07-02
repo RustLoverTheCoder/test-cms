@@ -222,18 +222,24 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
-        if (!!offset) {
-          query.skip(offset);
+        // filter
+        if (!!where) {
+          const mongooseFilter = convertToMongooseFilter(where);
+          console.log("mongooseFilter", mongooseFilter);
+          query = Model.find(mongooseFilter);
         }
-        if (!!limit) {
-          query.limit(limit);
-        }
-
         // sort
         if (!!sort) {
           const mongooseSort = flattenSort(sort[0]);
           console.log("mongooseSort", mongooseSort);
           query.sort(mongooseSort);
+        }
+
+        if (!!offset) {
+          query.skip(offset);
+        }
+        if (!!limit) {
+          query.limit(limit);
         }
 
         return query || [];
@@ -382,4 +388,64 @@ function flattenSort(criteria, prefix = "") {
     }
   }
   return flattened;
+}
+
+function convertToMongooseFilter(criteria) {
+  const mongooseFilter = {};
+
+  for (const key in criteria) {
+    if (criteria.hasOwnProperty(key)) {
+      const fieldCriteria = criteria[key];
+      const fieldFilter = {};
+
+      for (const op in fieldCriteria) {
+        if (fieldCriteria.hasOwnProperty(op) && fieldCriteria[op] !== null) {
+          switch (op) {
+            case "eq":
+              fieldFilter["$eq"] = fieldCriteria[op];
+              break;
+            case "neq":
+              fieldFilter["$ne"] = fieldCriteria[op];
+              break;
+            case "matches":
+              fieldFilter["$regex"] = fieldCriteria[op];
+              break;
+            case "in":
+              fieldFilter["$in"] = fieldCriteria[op];
+              break;
+            case "nin":
+              fieldFilter["$nin"] = fieldCriteria[op];
+              break;
+            case "gt":
+              fieldFilter["$gt"] = fieldCriteria[op];
+              break;
+            case "gte":
+              fieldFilter["$gte"] = fieldCriteria[op];
+              break;
+            case "lt":
+              fieldFilter["$lt"] = fieldCriteria[op];
+              break;
+            case "lte":
+              fieldFilter["$lte"] = fieldCriteria[op];
+              break;
+            case "is_defined":
+              if (fieldCriteria[op]) {
+                fieldFilter["$exists"] = true;
+              } else {
+                fieldFilter["$exists"] = false;
+              }
+              break;
+            default:
+              break;
+          }
+        }
+      }
+
+      if (Object.keys(fieldFilter).length > 0) {
+        mongooseFilter[key] = fieldFilter;
+      }
+    }
+  }
+
+  return mongooseFilter;
 }
