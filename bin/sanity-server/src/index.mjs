@@ -20,6 +20,7 @@ import { ExtendDirective } from "./directives/directive.mjs";
 import { DocumentInterface } from "./interface/document.mjs";
 
 import { BlockOrImageUnion } from "./union/BlockOrImage.mjs";
+import { GeopointType } from "./types/geopoint.mjs";
 
 import { SortOrderEnum } from "./enum/sortOrder.mjs";
 
@@ -80,6 +81,7 @@ const federationTypeDefs = gql`
   ${SortOrderEnum}
 
   ${BlockOrImageUnion}
+  ${GeopointType}
 
   ${FilterInput}
   ${SortOrderFilter}
