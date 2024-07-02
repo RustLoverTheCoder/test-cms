@@ -229,6 +229,13 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
           query.limit(limit);
         }
 
+        // sort
+        if (!!sort) {
+          const mongooseSort = flattenSort(sort[0]);
+          console.log("mongooseSort", mongooseSort);
+          query.sort(mongooseSort);
+        }
+
         return query || [];
       };
 
@@ -359,3 +366,20 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
     mutaionFields,
   };
 };
+
+// sort 转 mongoose sort
+function flattenSort(criteria, prefix = "") {
+  let flattened = {};
+  for (let key in criteria) {
+    if (criteria.hasOwnProperty(key)) {
+      const value = criteria[key];
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      if (typeof value === "object" && !Array.isArray(value)) {
+        Object.assign(flattened, flattenSort(value, newKey));
+      } else {
+        flattened[newKey] = value.toLowerCase();
+      }
+    }
+  }
+  return flattened;
+}
