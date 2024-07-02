@@ -18,7 +18,7 @@ const convertGraphqlFieldType = (field) => {
     case "date":
       return "Date";
     case "file":
-      return "String"; // todo file
+      return "File"; // todo file
     case "geopoint":
       return "Geopoint";
     case "number":
@@ -69,7 +69,7 @@ const convertGraphqlFilterType = (field) => {
     case "date":
       return "DateFilter";
     case "file":
-      return "StringFilter"; // todo FileFilter
+      return "FileFilter";
     case "geopoint":
       return "GeopointFilter";
     case "number":
@@ -101,7 +101,7 @@ const convertGraphqlSortOrderType = (field) => {
     case "date":
       return "SortOrder";
     case "file":
-      return "FileSorting"; // todo FileSorting
+      return "FileSorting"; 
     case "geopoint":
       return "GeopointSorting";
     case "number":
@@ -209,7 +209,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       // list
       const listName = `all${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`;
       queryFields.push(
-        `${listName}(where: ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter,sort: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Sorting!],offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}!]!`
+        `${listName}(where: ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter,sort: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Sorting!],offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}!]`
       );
 
       resolvers.Query[`${listName}`] = async (
@@ -248,7 +248,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       // find type by id
       const findName = `${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`;
       queryFields.push(
-        `${findName}(id: ID): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
+        `${findName}(id: ID!): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
       );
       resolvers.Query[`${findName}`] = async (_parent, input) => {
         const Model =

@@ -12,6 +12,8 @@ import mongoose from "mongoose";
 
 import { schema, schemaTypes } from "./schemaTypes/index.mjs";
 import { generateTypeDefsAndResolvers } from "./generate/graphql.mjs";
+import { generateFileTypeDefsAndResolvers } from "./generate/file.mjs";
+import { generateImageTypeDefsAndResolvers } from "./generate/image.mjs";
 
 import { ExtendDirective } from "./directives/directive.mjs";
 
@@ -34,6 +36,20 @@ const { DirectiveTypeDefs, DirectiveTransformer } = ExtendDirective();
 /*
   根据 schema 生成 typeDefs 和 resolvers
 */
+
+const {
+  typeDefs: fileTypeDefs,
+  resolvers: fileResolvers,
+  queryFields: fileQueryFields,
+  mutaionFields: fileMutaionFields,
+} = generateFileTypeDefsAndResolvers();
+
+const {
+  typeDefs: imageTypeDefs,
+  resolvers: imageResolvers,
+  queryFields: imageQueryFields,
+  mutaionFields: imageMutaionFields,
+} = generateImageTypeDefsAndResolvers();
 
 const { typeDefs, resolvers, queryFields, mutaionFields } =
   generateTypeDefsAndResolvers(schema, schemaTypes);
@@ -58,7 +74,7 @@ const federationTypeDefs = gql`
     current: String
     source: String
   }
-    
+
   ${DocumentInterface}
 
   ${SortOrderEnum}
@@ -68,13 +84,20 @@ const federationTypeDefs = gql`
   ${FilterInput}
   ${SortOrderFilter}
 
+  ${fileTypeDefs}
+  ${imageTypeDefs}
+
   ${[DirectiveTypeDefs, typeDefs, SearchTypeDefs].join("\n    ")}
         type Query {
+        ${fileQueryFields.join("\n  ")}
+        ${imageQueryFields.join("\n  ")}
         ${queryFields.join("\n  ")}
         ${SearchQueryFields.join("\n  ")}
       }
 
       type Mutation {
+        ${fileMutaionFields.join("\n  ")}
+        ${imageMutaionFields.join("\n  ")}
         ${mutaionFields.join("\n  ")}
       }
 `;
@@ -83,12 +106,18 @@ let graphqlSchema = buildSubgraphSchema({
   typeDefs: federationTypeDefs,
   resolvers: {
     Query: {
+      ...fileResolvers.Query,
+      ...imageResolvers.Query,
       ...resolvers.Query,
       ...SearchQuery,
     },
     Mutation: {
+      ...fileResolvers.Mutation,
+      ...imageResolvers.Mutation,
       ...resolvers.Mutation,
     },
+    ...fileResolvers,
+    ...imageResolvers,
     ...resolvers,
     JSON: GraphQLJSON,
     DateTime: GraphQLDateTime,

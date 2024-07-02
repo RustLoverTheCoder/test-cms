@@ -2,6 +2,17 @@
 export const BlockOrImageUnion = `
 union BlockOrImage = Block | Image
 
+input BooleanFilter {
+  """Checks if the value is equal to the given input."""
+  eq: Boolean
+
+  """Checks if the value is not equal to the given input."""
+  neq: Boolean
+
+  """Checks if the value is defined."""
+  is_defined: Boolean
+}
+
 type Block {
   _key: String
   _type: String
@@ -96,6 +107,26 @@ type Geopoint {
   alt: Float
 }
 
+input GeopointFilter {
+  _key: StringFilter
+  _type: StringFilter
+  lat: FloatFilter
+  lng: FloatFilter
+  alt: FloatFilter
+}
+
+
+input GeopointSorting {
+  _key: SortOrder
+  _type: SortOrder
+  lat: SortOrder
+  lng: SortOrder
+  alt: SortOrder
+}
+
+
+
+
 
 type SanityImageDimensions {
     _key: String
@@ -116,6 +147,8 @@ type SanityImagePalette {
   lightMuted: SanityImagePaletteSwatch
   muted: SanityImagePaletteSwatch
 }
+
+
 
 type SanityImagePaletteSwatch {
   _key: String

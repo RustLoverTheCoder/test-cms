@@ -37,6 +37,29 @@ input StringFilter {
   is_defined: Boolean
 }
 
+input FloatFilter {
+  """Checks if the value is equal to the given input."""
+  eq: Float
+
+  """Checks if the value is not equal to the given input."""
+  neq: Float
+
+  """Checks if the value is greater than the given input."""
+  gt: Float
+
+  """Checks if the value is greater than or equal to the given input."""
+  gte: Float
+
+  """Checks if the value is lesser than the given input."""
+  lt: Float
+
+  """Checks if the value is lesser than or equal to the given input."""
+  lte: Float
+
+  """Checks if the value is defined."""
+  is_defined: Boolean
+}
+
 input DatetimeFilter {
   """Checks if the value is equal to the given input."""
   eq: DateTime
