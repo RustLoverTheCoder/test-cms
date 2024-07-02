@@ -1,8 +1,12 @@
-import { makeExecutableSchema, mergeSchemas } from "@graphql-tools/schema";
+// import { makeExecutableSchema, mergeSchemas } from "@graphql-tools/schema";
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { buildSubgraphSchema } from "@apollo/subgraph";
 import gql from "graphql-tag";
+// scalar
+import GraphQLJSON from "graphql-type-json";
+import GraphQLDateTime from "graphql-type-datetime";
+import GraphQLDate from "../src/scalars/date.mjs";
 
 import mongoose from "mongoose";
 
@@ -10,6 +14,15 @@ import { schema, schemaTypes } from "./schemaTypes/index.mjs";
 import { generateTypeDefsAndResolvers } from "./generate/graphql.mjs";
 
 import { ExtendDirective } from "./directives/directive.mjs";
+
+import { DocumentInterface } from "./interface/document.mjs";
+
+import { BlockOrImageUnion } from "./union/BlockOrImage.mjs";
+
+import { SortOrderEnum } from "./enum/sortOrder.mjs";
+
+import { FilterInput } from "./filter/filter.mjs";
+import { SortOrderFilter } from "./filter/sortOrder.mjs";
 
 import { SearchExtend } from "./extend/search.mjs";
 
@@ -35,6 +48,19 @@ const federationTypeDefs = gql`
       import: ["@key", "@shareable", "@authenticated", "@requiresScopes"]
     )
 
+  scalar JSON
+  scalar DateTime
+  scalar Date
+
+  ${DocumentInterface}
+
+  ${SortOrderEnum}
+
+  ${BlockOrImageUnion}
+
+  ${FilterInput}
+  ${SortOrderFilter}
+
   ${[DirectiveTypeDefs, typeDefs, SearchTypeDefs].join("\n    ")}
         type Query {
         ${queryFields.join("\n  ")}
@@ -57,6 +83,9 @@ let graphqlSchema = buildSubgraphSchema({
       ...resolvers.Mutation,
     },
     ...resolvers,
+    JSON: GraphQLJSON,
+    DateTime: GraphQLDateTime,
+    Date: GraphQLDate,
   },
 });
 

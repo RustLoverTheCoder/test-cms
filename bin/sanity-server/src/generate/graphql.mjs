@@ -1,4 +1,5 @@
 import { generateMongooseModels } from "./db.mjs";
+import { DocumentInterfaceFields } from "../interface/document.mjs";
 const convertGraphqlFieldType = (field) => {
   switch (field.type) {
     case "string":
@@ -33,24 +34,40 @@ const convertGraphqlInputFieldType = (field) => {
   }
 };
 
+const convertGraphqlFilterType = (field) => {
+  switch (field.type) {
+    case "string":
+      return "StringFilter";
+    case "slug":
+      return "SlugFilter";
+    case "image":
+      return `ImageFilter`;
+    case "reference":
+      return `${field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)}Filter`;
+    default:
+      return "StringFilter";
+  }
+};
+
+const convertGraphqlSortOrderType = (field) => {
+  switch (field.type) {
+    case "string":
+      return "SortOrder";
+    case "slug":
+      return "SlugSorting";
+    case "image":
+      return `ImageSorting`;
+    default:
+      return "SortOrder";
+  }
+};
+
 export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
   const models = generateMongooseModels(schema, schemaTypes);
   console.log("models", models);
 
   const typeDefs = [];
   const resolvers = { Query: {}, Mutation: {} };
-
-  const typeNames = schema.getTypeNames();
-
-  // const hasImageType = typeNames.some((type) => type === "image");
-  // if (hasImageType) {
-  //   typeDefs.push(`
-  //       type Image {
-  //         asset: String
-  //         hotspot: Boolean
-  //       }
-  //     `);
-  // }
 
   const queryFields = [];
   const mutaionFields = [];
@@ -77,43 +94,72 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         })
         .join("\n    ");
 
+      const filterFields = type.fields
+        .map((field) => {
+          if (field.type !== "array") {
+            const fieldType = convertGraphqlFilterType(field);
+            return `${field.name}: ${fieldType}`;
+          }
+        })
+        .join("\n    ");
+
+      const sortOrderFields = type.fields
+        .map((field) => {
+          if (field.type !== "array" && field.type !== "reference") {
+            const fieldType = convertGraphqlSortOrderType(field);
+            return `${field.name}: ${fieldType}`;
+          }
+        })
+        .join("\n    ");
+
       // 测试 @authenticated
-      if (type.name.charAt(0).toUpperCase() + type.name.slice(1) === "Post") {
-        typeDefs.push(`
-            input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
-              ${inputFields}
-            }
+      typeDefs.push(`
+        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
+          ${inputFields}
+        }
 
-            type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} @authenticated @key(fields: "id") {
-              id: ID
-              ${fields}
-            }
-          `);
-      } else {
-        typeDefs.push(`
-            input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
-              ${inputFields}
-            }
+        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Filter"} {
+          """Apply filters on document level"""
+          _: Sanity_DocumentFilter
+          _id: IDFilter
+          _type: StringFilter
+          _createdAt: DatetimeFilter
+          _updatedAt: DatetimeFilter
+          _rev: StringFilter
+          _key: StringFilter
+          ${filterFields}
+        }
 
-            type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} {
-              id: ID
-              ${fields}
-            }
-          `);
-      }
+        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Sorting"} {
+          _id: SortOrder
+          _type: SortOrder
+          _createdAt: SortOrder
+          _updatedAt: SortOrder
+          _rev: SortOrder
+          _key: SortOrder
+          ${sortOrderFields}
+        }
+
+        type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} implements Document  @authenticated @key(fields: "_id") {
+          ${DocumentInterfaceFields}
+          ${fields}
+        }
+      `);
 
       // query
       // list
-      const listName = `${type.name}s`;
+      const listName = `all${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`;
       queryFields.push(
-        `${listName}(offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
+        `${listName}(where: ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter,sort: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Sorting!],offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
       );
 
       resolvers.Query[`${listName}`] = async (
         _,
-        { offset, limit },
+        { where, sort, offset, limit },
         _context
       ) => {
+        console.log("where", where);
+        console.log("sort", sort);
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
@@ -128,7 +174,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       };
 
       // find type by id
-      const findName = `find_${type.name}_by_id`;
+      const findName = `${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`;
       queryFields.push(
         `${findName}(id: ID): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
       );

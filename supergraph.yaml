@@ -2,7 +2,7 @@ federation_version: 2
 subgraphs:
   content:
     schema:
-      subgraph_url: http://localhost:4006
+      subgraph_url: https://ec5byyvi.api.sanity.io/v2023-08-01/graphql/production/default
   # transform:
   #   schema:
   #     subgraph_url: http://localhost:4002
