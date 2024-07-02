@@ -52,6 +52,13 @@ const federationTypeDefs = gql`
   scalar DateTime
   scalar Date
 
+  type Slug {
+    _key: String
+    _type: String
+    current: String
+    source: String
+  }
+    
   ${DocumentInterface}
 
   ${SortOrderEnum}

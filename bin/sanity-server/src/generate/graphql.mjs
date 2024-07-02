@@ -1,19 +1,38 @@
 import { generateMongooseModels } from "./db.mjs";
 import { DocumentInterfaceFields } from "../interface/document.mjs";
+
 const convertGraphqlFieldType = (field) => {
   switch (field.type) {
     case "string":
       return "String";
     case "slug":
-      return "String";
+      return "Slug";
     case "image":
-      return `String @requiresScopes(scopes: [["read:image"]])`;
+      return `Image @requiresScopes(scopes: [["read:image"]])`;
     case "array":
       return `[${field.of.map((ofType) => convertGraphqlFieldType(ofType)).join(", ")}]`;
     case "reference":
       return `${field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)}`;
+    case "datetime":
+      return "DateTime";
+    case "date":
+      return "Date";
+    case "file":
+      return "String"; // todo file
+    case "geopoint":
+      return "Geopoint";
+    case "number":
+      return "Float";
+    case "object":
+      return "String"; // todo object
+    case "text":
+      return "String";
+    case "url":
+      return "String";
+    case "blockContent":
+      return "JSON";
     default:
-      return "String"; // Default to String if type is not explicitly handled
+      return "String";
   }
 };
 
@@ -34,6 +53,7 @@ const convertGraphqlInputFieldType = (field) => {
   }
 };
 
+// array blockContent 没有
 const convertGraphqlFilterType = (field) => {
   switch (field.type) {
     case "string":
@@ -44,11 +64,30 @@ const convertGraphqlFilterType = (field) => {
       return `ImageFilter`;
     case "reference":
       return `${field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)}Filter`;
+    case "datetime":
+      return "DatetimeFilter";
+    case "date":
+      return "DateFilter";
+    case "file":
+      return "StringFilter"; // todo FileFilter
+    case "geopoint":
+      return "GeopointFilter";
+    case "number":
+      return "FloatFilter";
+    case "object":
+      return "StringFilter"; // todo objectFilter
+    case "text":
+      return "StringFilter";
+    case "url":
+      return "StringFilter";
+    case "blockContent":
+      return "JSON";
     default:
       return "StringFilter";
   }
 };
 
+// array reference blockContent 没有
 const convertGraphqlSortOrderType = (field) => {
   switch (field.type) {
     case "string":
@@ -57,6 +96,22 @@ const convertGraphqlSortOrderType = (field) => {
       return "SlugSorting";
     case "image":
       return `ImageSorting`;
+    case "datetime":
+      return "SortOrder";
+    case "date":
+      return "SortOrder";
+    case "file":
+      return "FileSorting"; // todo FileSorting
+    case "geopoint":
+      return "GeopointSorting";
+    case "number":
+      return "SortOrder";
+    case "object":
+      return "SortOrder"; // todo ObjectSorting
+    case "text":
+      return "SortOrder";
+    case "url":
+      return "SortOrder";
     default:
       return "SortOrder";
   }
@@ -96,7 +151,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
       const filterFields = type.fields
         .map((field) => {
-          if (field.type !== "array") {
+          if (field.type !== "array" && field.type !== "blockContent") {
             const fieldType = convertGraphqlFilterType(field);
             return `${field.name}: ${fieldType}`;
           }
@@ -105,7 +160,11 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
       const sortOrderFields = type.fields
         .map((field) => {
-          if (field.type !== "array" && field.type !== "reference") {
+          if (
+            field.type !== "array" &&
+            field.type !== "reference" &&
+            field.type !== "blockContent"
+          ) {
             const fieldType = convertGraphqlSortOrderType(field);
             return `${field.name}: ${fieldType}`;
           }
@@ -150,7 +209,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       // list
       const listName = `all${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`;
       queryFields.push(
-        `${listName}(where: ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter,sort: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Sorting!],offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}]`
+        `${listName}(where: ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter,sort: [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Sorting!],offset: Int, limit: Int): [${type.name.charAt(0).toUpperCase() + type.name.slice(1)}!]!`
       );
 
       resolvers.Query[`${listName}`] = async (
@@ -197,6 +256,9 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         const model = new Model({
+          _type: type.name,
+          _createdAt: new Date(),
+          _updatedAt: new Date(),
           ...input,
         });
         await model.save();
@@ -272,6 +334,9 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       });
 
       // console.log("resolvers", resolvers);
+    }
+    // object
+    if (type.type === "object") {
     }
   });
 

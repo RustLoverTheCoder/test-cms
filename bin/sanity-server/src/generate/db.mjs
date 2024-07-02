@@ -5,7 +5,7 @@ const convertFieldTypeToMongoose = (field) => {
     case "string":
       return { type: String };
     case "slug":
-      return { type: String, required: true };
+      return { type: String };
     case "image":
       return { type: String }; // You might want to store just the URL or a reference to a file
     case "array":
@@ -46,7 +46,22 @@ export const generateMongooseModels = (schema, schemaTypes) => {
         acc[field.name] = convertFieldTypeToMongoose(field);
         return acc;
       }, {});
-      console.log("fields", fields);
+      fields["_type"] = {
+        type: String,
+      };
+
+      fields["_createdAt"] = {
+        type: Date,
+      };
+
+      fields["_updatedAt"] = {
+        type: Date,
+      };
+
+      fields["_rev"] = {
+        type: String,
+      };
+
       const schemaDefinition = new mongoose.Schema(fields);
       models[type.name.charAt(0).toUpperCase() + type.name.slice(1)] =
         mongoose.model(
