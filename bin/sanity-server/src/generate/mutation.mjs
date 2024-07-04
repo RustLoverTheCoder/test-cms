@@ -271,7 +271,6 @@ export const generateMutations = (type, fields, models) => {
 
           // todo 这个插入是不会去重的
           if (insert) updateFields.$push = insert;
-          console.log("updateFields", updateFields);
           const model = await Model.findByIdAndUpdate(
             id,
             {
