@@ -26,6 +26,11 @@ export const Author = {
       },
     },
     {
+      name: "age",
+      title: "Age",
+      type: "number",
+    },
+    {
       name: "posts",
       title: "Posts",
       type: "array",

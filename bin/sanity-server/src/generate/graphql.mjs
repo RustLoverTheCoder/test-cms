@@ -1,5 +1,6 @@
 import { generateMongooseModels } from "./db.mjs";
 import { DocumentInterfaceFields } from "../interface/document.mjs";
+import { generateMutations } from "./mutation.mjs";
 
 const convertGraphqlFieldType = (field) => {
   switch (field.type) {
@@ -33,23 +34,6 @@ const convertGraphqlFieldType = (field) => {
       return "JSON";
     default:
       return "String";
-  }
-};
-
-const convertGraphqlInputFieldType = (field) => {
-  switch (field.type) {
-    case "string":
-      return "String";
-    case "slug":
-      return "String";
-    case "image":
-      return "String";
-    case "array":
-      return `[${field.of.map((ofType) => convertGraphqlInputFieldType(ofType)).join(", ")}]`;
-    case "reference":
-      return "ID";
-    default:
-      return "String"; // Default to String if type is not explicitly handled
   }
 };
 
@@ -101,7 +85,7 @@ const convertGraphqlSortOrderType = (field) => {
     case "date":
       return "SortOrder";
     case "file":
-      return "FileSorting"; 
+      return "FileSorting";
     case "geopoint":
       return "GeopointSorting";
     case "number":
@@ -140,15 +124,6 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         })
         .join("\n    ");
 
-      const inputFields = type.fields
-        .map((field) => {
-          if (field.type !== "array") {
-            const fieldType = convertGraphqlInputFieldType(field);
-            return `${field.name}: ${fieldType}`;
-          }
-        })
-        .join("\n    ");
-
       const filterFields = type.fields
         .map((field) => {
           if (field.type !== "array" && field.type !== "blockContent") {
@@ -171,11 +146,15 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         })
         .join("\n    ");
 
+      const {
+        typeDefs: MutationTypeDefs,
+        mutaionField,
+        resolvers: mutationResolvers,
+      } = generateMutations(type.name, type.fields, models);
+
       // 测试 @authenticated
       typeDefs.push(`
-        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"} {
-          ${inputFields}
-        }
+        ${MutationTypeDefs}
 
         input ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Filter"} {
           """Apply filters on document level"""
@@ -261,43 +240,49 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
       // mutation
       // create
-      const createName = `create_${type.name}`;
-      mutaionFields.push(
-        `${createName}(input: ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"}): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
+      mutaionFields.push(`${mutaionField}`);
+      resolvers.Mutation = Object.assign(
+        resolvers.Mutation,
+        mutationResolvers.Mutation
       );
-      resolvers.Mutation[createName] = async (_parent, { input }) => {
-        const Model =
-          models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
-        const model = new Model({
-          _type: type.name,
-          _createdAt: new Date(),
-          _updatedAt: new Date(),
-          ...input,
-        });
-        await model.save();
-        // post 关联 author, 需要更新
-        let typeReference = type.fields.find(
-          (field) => field.type === "reference"
-        );
-        if (!!typeReference) {
-          const to = typeReference.to.type;
-          const referenceModel =
-            models?.[to.charAt(0).toUpperCase() + to.slice(1)];
-          const id = input?.[to];
-          const modelId = model._id.toString();
-          await referenceModel.findByIdAndUpdate(
-            id,
-            {
-              $push: { [`${type.name.toLowerCase()}s`]: modelId },
-            },
-            { new: true }
-          );
-        }
 
-        let query = model;
+      // const createName = `create_${type.name}`;
+      // mutaionFields.push(
+      //   `${createName}(input: ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"}): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
+      // );
+      // resolvers.Mutation[createName] = async (_parent, { input }) => {
+      //   const Model =
+      //     models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
+      //   const model = new Model({
+      //     _type: type.name,
+      //     _createdAt: new Date(),
+      //     _updatedAt: new Date(),
+      //     ...input,
+      //   });
+      //   await model.save();
+      //   // post 关联 author, 需要更新
+      //   let typeReference = type.fields.find(
+      //     (field) => field.type === "reference"
+      //   );
+      //   if (!!typeReference) {
+      //     const to = typeReference.to.type;
+      //     const referenceModel =
+      //       models?.[to.charAt(0).toUpperCase() + to.slice(1)];
+      //     const id = input?.[to];
+      //     const modelId = model._id.toString();
+      //     await referenceModel.findByIdAndUpdate(
+      //       id,
+      //       {
+      //         $push: { [`${type.name.toLowerCase()}s`]: modelId },
+      //       },
+      //       { new: true }
+      //     );
+      //   }
 
-        return query;
-      };
+      //   let query = model;
+
+      //   return query;
+      // };
 
       // 新增字段解析 比如 Author 要实现 对 posts 的解析
       resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};

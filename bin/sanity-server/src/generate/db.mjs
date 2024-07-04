@@ -32,6 +32,8 @@ const convertFieldTypeToMongoose = (field) => {
         type: mongoose.Schema.Types.ObjectId,
         ref: field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1),
       };
+    case "number":
+      return { type: Number };
     default:
       return { type: String }; // Default to String if type is not explicitly handled
   }

@@ -1,0 +1,271 @@
+import mongoose from "mongoose";
+
+const convertGraphqlInputFieldType = (field) => {
+  switch (field.type) {
+    case "string":
+      return "String";
+    case "slug":
+      return "String";
+    case "image":
+      return "ID";
+    case "array":
+      return `[${field.of.map((ofType) => convertGraphqlInputFieldType(ofType)).join(", ")}]`;
+    case "reference":
+      return "ID";
+    case "datetime":
+      return "DateTime";
+    case "date":
+      return "Date";
+    case "file":
+      return "String"; // todo file
+    case "geopoint":
+      return "String"; // todo geopoint
+    case "number":
+      return "Float";
+    case "object":
+      return "String"; // todo object
+    case "text":
+      return "String";
+    case "url":
+      return "String";
+    case "blockContent":
+      return "JSON";
+    default:
+      return "String";
+  }
+};
+
+export const generateMutations = (type, fields, models) => {
+  const name = type.charAt(0).toUpperCase() + type.slice(1);
+
+  const createInputFields = fields
+    .map((field) => {
+      if (field.type !== "array") {
+        const fieldType = convertGraphqlInputFieldType(field);
+        return `${field.name}: ${fieldType}`;
+      }
+    })
+    .join("\n    ");
+
+  // 删除字段
+  const patchUnsetInputFields = fields
+    .map((field) => {
+      return `${field.name}: String`;
+    })
+    .join("\n    ");
+
+  const hasNumberField = fields.some((field) => field.type === "number");
+
+  // 数字字段
+  const patchDecOrIncInputFields = fields
+    .map((field) => {
+      if (field.type == "number") {
+        return `${field.name}: Float`;
+      }
+    })
+    .join("\n    ");
+
+  const hasArrayField = fields.some((field) => field.type === "array");
+
+  // 数组字段
+  const patchInsertFields = fields
+    .map((field) => {
+      if (field.type == "array") {
+        return `${field.name}: ID`; //todo 不止关联id
+      }
+    })
+    .join("\n    ");
+
+  return {
+    typeDefs: `
+      input create${name}Input {
+          _id: ID
+          ${createInputFields}
+      }
+
+      input createOrReplace${name}Input {
+          _id: ID!
+          ${createInputFields}
+      }
+
+      input delete${name}Input {
+            id: ID!
+      }
+
+      input patchSet${name}Input {
+        ${createInputFields}
+      }
+
+      input patchSetIfMissing${name}Input {
+        ${createInputFields}
+      }
+
+      input patchUnset${name}Input {
+        ${patchUnsetInputFields}
+      }
+
+      ${
+        hasNumberField
+          ? `
+        input patchInc${name}Input {
+        ${patchDecOrIncInputFields}
+      }
+
+      input patchDec${name}Input {
+        ${patchDecOrIncInputFields}
+      }
+
+        `
+          : ""
+      }
+
+      ${
+        hasArrayField
+          ? `
+         input patchInsert${name}Input {
+            ${patchInsertFields}
+        }
+        `
+          : ""
+      }
+      
+     
+
+      input patch${name}Input {
+        id: ID!
+        set: patchSet${name}Input
+        setIfMissing: patchSetIfMissing${name}Input
+        unset: patchUnset${name}Input #删除字段
+        ${
+          hasNumberField
+            ? `
+        inc: patchInc${name}Input #对数值字段递增操作
+        dec: patchDec${name}Input #对数值字段递减操作
+            `
+            : ""
+        }
+        ${hasArrayField ? `insert: patchInsert${name}Input #对数组字段插入新值` : ""}
+      }
+  
+      `,
+    mutaionField: `
+  
+      create${name}(input: create${name}Input!): ${name}!
+      
+      createOrReplace${name}(input: createOrReplace${name}Input!): ${name}!
+  
+      createIfNotExists${name}(input: createOrReplace${name}Input!): ${name}!
+  
+      delete${name}(input: delete${name}Input!): String
+  
+      patch${name}(input: patch${name}Input!): ${name}!
+
+      `,
+    resolvers: {
+      Mutation: {
+        [`create${name}`]: async (_parent, { input }) => {
+          const { _id, ...arg } = input;
+
+          const Model = models?.[name];
+
+          const model = new Model({
+            _id: _id
+              ? new mongoose.Types.ObjectId(_id)
+              : new mongoose.Types.ObjectId(),
+            _type: type,
+            _createdAt: new Date(),
+            _updatedAt: new Date(),
+            ...arg,
+          });
+
+          const typeReference = fields.find(
+            (field) => field.type === "reference"
+          );
+
+          if (!!typeReference) {
+            const to = typeReference.to.type;
+            const referenceModel =
+              models?.[to.charAt(0).toUpperCase() + to.slice(1)];
+            const id = input?.[to];
+            const modelId = model._id.toString();
+            await referenceModel.findByIdAndUpdate(
+              id,
+              {
+                $push: { [`${type.toLowerCase()}s`]: modelId },
+              },
+              { new: true }
+            );
+          }
+          await model.save();
+          return model;
+        },
+        [`createOrReplace${name}`]: async (_parent, { input }) => {
+          const { _id, ...arg } = input;
+          const Model = models?.[name];
+          const model = await Model.findByIdAndUpdate(
+            _id,
+            {
+              _type: type,
+              _updatedAt: new Date(),
+              ...arg,
+            },
+            { upsert: true, new: true }
+          );
+          return model;
+        },
+        [`createIfNotExists${name}`]: async (_parent, { input }) => {
+          const { _id, ...arg } = input;
+          const Model = models?.[name];
+          const existingModel = await Model.findById(_id);
+          if (existingModel) {
+            return existingModel;
+          }
+          const model = new Model({
+            _id: _id
+              ? new mongoose.Types.ObjectId(_id)
+              : new mongoose.Types.ObjectId(),
+            _type: type,
+            _createdAt: new Date(),
+            _updatedAt: new Date(),
+            ...arg,
+          });
+          await model.save();
+          return model;
+        },
+        [`delete${name}`]: async (_parent, { input }) => {
+          const { id } = input;
+          const Model = models?.[name];
+          await Model.findByIdAndDelete(id);
+          return "Deleted successfully";
+        },
+        [`patch${name}`]: async (_parent, { input }) => {
+          const { id, set, setIfMissing, unset, inc, dec, insert } = input;
+          const Model = models?.[name];
+          const updateFields = {};
+          if (set) updateFields.$set = set;
+          if (setIfMissing) updateFields.$setOnInsert = setIfMissing;
+
+          // todo 如果先删除数组，再insert 是发生错误
+          if (unset) updateFields.$unset = unset;
+          if (inc) updateFields.$inc = inc;
+          if (dec) updateFields.$dec = dec;
+          
+          // todo 这个插入是不会去重的
+          if (insert) updateFields.$push = insert;
+          console.log("updateFields", updateFields);
+          const model = await Model.findByIdAndUpdate(
+            id,
+            {
+              _updatedAt: new Date(),
+              ...updateFields,
+            },
+            {
+              new: true,
+            }
+          );
+          return model;
+        },
+      },
+    },
+  };
+};
