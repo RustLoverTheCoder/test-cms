@@ -30,6 +30,8 @@ const convertGraphqlInputFieldType = (field) => {
       return "String";
     case "blockContent":
       return "JSON";
+    case "boolean":
+      return "Boolean";
     default:
       return "String";
   }
@@ -182,19 +184,36 @@ export const generateMutations = (type, fields, models) => {
             (field) => field.type === "reference"
           );
 
+          console.log("typeReference", typeReference);
+
           if (!!typeReference) {
             const to = typeReference.to.type;
+            console.log("to", to);
             const referenceModel =
               models?.[to.charAt(0).toUpperCase() + to.slice(1)];
+            console.log("referenceModel", referenceModel);
             const id = input?.[to];
             const modelId = model._id.toString();
-            await referenceModel.findByIdAndUpdate(
-              id,
-              {
-                $push: { [`${type.toLowerCase()}s`]: modelId },
-              },
-              { new: true }
-            );
+            // 这里需要区分 to 文档 对自己是array还是
+            try {
+              await referenceModel.findByIdAndUpdate(
+                id,
+                {
+                  $set: { [`${type}`]: modelId },
+                },
+                { new: true }
+              );
+
+              await referenceModel.findByIdAndUpdate(
+                id,
+                {
+                  $push: { [`${type}s`]: modelId },
+                },
+                { new: true }
+              );
+            } catch (error) {
+              console.log("error", error);
+            }
           }
           await model.save();
           return model;
@@ -249,7 +268,7 @@ export const generateMutations = (type, fields, models) => {
           if (unset) updateFields.$unset = unset;
           if (inc) updateFields.$inc = inc;
           if (dec) updateFields.$dec = dec;
-          
+
           // todo 这个插入是不会去重的
           if (insert) updateFields.$push = insert;
           console.log("updateFields", updateFields);

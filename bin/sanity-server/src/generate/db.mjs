@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { AssetObject } from "../schemaTypes/AssetObject.mjs";
 
 const convertFieldTypeToMongoose = (field) => {
   switch (field.type) {
@@ -48,6 +49,7 @@ export const generateMongooseModels = (schema, schemaTypes) => {
         acc[field.name] = convertFieldTypeToMongoose(field);
         return acc;
       }, {});
+
       fields["_type"] = {
         type: String,
       };
@@ -63,7 +65,7 @@ export const generateMongooseModels = (schema, schemaTypes) => {
       fields["_rev"] = {
         type: String,
       };
-
+      console.log("MongooseModels", type.name, fields);
       const schemaDefinition = new mongoose.Schema(fields);
       models[type.name.charAt(0).toUpperCase() + type.name.slice(1)] =
         mongoose.model(

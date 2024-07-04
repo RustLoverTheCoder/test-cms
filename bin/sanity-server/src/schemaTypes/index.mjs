@@ -1,9 +1,10 @@
 import { Schema } from "@sanity/schema";
 
-import { Post } from "./post.mjs";
-import { Author } from "./author.mjs";
+import { AssetObject } from "./AssetObject.mjs";
+import { FilePath } from "./FilePath.mjs";
+import { MediaData } from "./MediaData.mjs";
 
-export const schemaTypes = [Post, Author];
+export const schemaTypes = [AssetObject, FilePath, MediaData];
 
 export const schema = new Schema({
   name: "test",
