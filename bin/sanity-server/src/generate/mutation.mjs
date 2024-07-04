@@ -184,36 +184,28 @@ export const generateMutations = (type, fields, models) => {
             (field) => field.type === "reference"
           );
 
-          console.log("typeReference", typeReference);
-
           if (!!typeReference) {
             const to = typeReference.to.type;
-            console.log("to", to);
             const referenceModel =
               models?.[to.charAt(0).toUpperCase() + to.slice(1)];
-            console.log("referenceModel", referenceModel);
             const id = input?.[to];
             const modelId = model._id.toString();
-            // 这里需要区分 to 文档 对自己是array还是
-            try {
-              await referenceModel.findByIdAndUpdate(
-                id,
-                {
-                  $set: { [`${type}`]: modelId },
-                },
-                { new: true }
-              );
+            // todo 这里需要区分 to 文档 对自己是array还是
+            await referenceModel.findByIdAndUpdate(
+              id,
+              {
+                $set: { [`${type}`]: modelId },
+              },
+              { new: true }
+            );
 
-              await referenceModel.findByIdAndUpdate(
-                id,
-                {
-                  $push: { [`${type}s`]: modelId },
-                },
-                { new: true }
-              );
-            } catch (error) {
-              console.log("error", error);
-            }
+            await referenceModel.findByIdAndUpdate(
+              id,
+              {
+                $push: { [`${type}s`]: modelId },
+              },
+              { new: true }
+            );
           }
           await model.save();
           return model;
