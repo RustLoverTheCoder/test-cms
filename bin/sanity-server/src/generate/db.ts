@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import { AssetObject } from "../schemaTypes/AssetObject.mjs";
 
-const convertFieldTypeToMongoose = (field) => {
+const convertFieldTypeToMongoose: any = (field: any) => {
   switch (field.type) {
     case "string":
       return { type: String };
@@ -58,12 +57,12 @@ const convertFieldTypeToMongoose = (field) => {
   }
 };
 
-export const generateMongooseModels = (schema, schemaTypes) => {
-  const models = {};
+export const generateMongooseModels = (schema: any, schemaTypes: any) => {
+  const models: any = {};
 
-  schemaTypes.forEach((type) => {
+  schemaTypes.forEach((type: any) => {
     if (type.type === "document") {
-      const fields = type.fields.reduce((acc, field) => {
+      const fields = type.fields.reduce((acc: any, field: any) => {
         acc[field.name] = convertFieldTypeToMongoose(field);
         return acc;
       }, {});

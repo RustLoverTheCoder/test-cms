@@ -3,7 +3,7 @@ import { GraphQLScalarType, Kind } from "graphql";
 const GraphQLDate = new GraphQLScalarType({
   name: "Date",
   description: "Date custom scalar type",
-  parseValue(value) {
+  parseValue(value:any) {
     if (!value) return null;
     return new Date(parseInt(value, 10));
   },

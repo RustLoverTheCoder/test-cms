@@ -5,7 +5,7 @@
   "main": "index.cjs",
   "module": "commonjs",
   "scripts": {
-    "start": "ts-node ./src/index.mjs"
+    "start": "ts-node ./src/index.ts"
   },
   "keywords": [],
   "author": "",

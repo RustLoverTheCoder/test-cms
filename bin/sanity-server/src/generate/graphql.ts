@@ -1,8 +1,8 @@
-import { generateMongooseModels } from "./db.mjs";
-import { DocumentInterfaceFields } from "../interface/document.mjs";
-import { generateMutations } from "./mutation.mjs";
+import { generateMongooseModels } from "./db";
+import { DocumentInterfaceFields } from "../interface/document";
+import { generateMutations } from "./mutation";
 
-const convertGraphqlFieldType = (field) => {
+const convertGraphqlFieldType = (field: any) => {
   switch (field.type) {
     case "string":
       return "String";
@@ -11,7 +11,7 @@ const convertGraphqlFieldType = (field) => {
     case "image":
       return `Image @requiresScopes(scopes: [["read:image"]])`;
     case "array":
-      return `[${field.of.map((ofType) => convertGraphqlFieldType(ofType)).join(", ")}]`;
+      return `[${field.of.map((ofType: any) => convertGraphqlFieldType(ofType)).join(", ")}]`;
     case "reference":
       return `${field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)}`;
     case "datetime":
@@ -40,7 +40,7 @@ const convertGraphqlFieldType = (field) => {
 };
 
 // array blockContent 没有
-const convertGraphqlFilterType = (field) => {
+const convertGraphqlFilterType = (field: any) => {
   switch (field.type) {
     case "string":
       return "StringFilter";
@@ -74,7 +74,7 @@ const convertGraphqlFilterType = (field) => {
 };
 
 // array reference blockContent 没有
-const convertGraphqlSortOrderType = (field) => {
+const convertGraphqlSortOrderType = (field: any) => {
   switch (field.type) {
     case "string":
       return "SortOrder";
@@ -103,20 +103,20 @@ const convertGraphqlSortOrderType = (field) => {
   }
 };
 
-export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
+export const generateTypeDefsAndResolvers = (schema: any, schemaTypes: any) => {
   const models = generateMongooseModels(schema, schemaTypes);
   console.log("models", models);
 
-  const typeDefs = [];
-  const resolvers = { Query: {}, Mutation: {} };
+  const typeDefs: any = [];
+  const resolvers: any = { Query: {}, Mutation: {} };
 
-  const queryFields = [];
-  const mutaionFields = [];
+  const queryFields: any = [];
+  const mutaionFields: any = [];
 
-  schemaTypes.forEach((type) => {
+  schemaTypes.forEach((type: any) => {
     if (type.type === "document") {
       const fields = type.fields
-        .map((field) => {
+        .map((field: any) => {
           const fieldType = convertGraphqlFieldType(field);
           let key = field.name;
           if (field.type === "array") {
@@ -127,7 +127,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         .join("\n    ");
 
       const filterFields = type.fields
-        .map((field) => {
+        .map((field: any) => {
           if (field.type !== "array" && field.type !== "blockContent") {
             const fieldType = convertGraphqlFilterType(field);
             return `${field.name}: ${fieldType}`;
@@ -136,7 +136,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         .join("\n    ");
 
       const sortOrderFields = type.fields
-        .map((field) => {
+        .map((field: any) => {
           if (
             field.type !== "array" &&
             field.type !== "reference" &&
@@ -194,9 +194,9 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       );
 
       resolvers.Query[`${listName}`] = async (
-        _,
-        { where, sort, offset, limit },
-        _context
+        _: any,
+        { where, sort, offset, limit }: any,
+        _context: any
       ) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
@@ -214,7 +214,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
           if (!!where?._?.references) {
             const typeReference = type.fields.find(
-              (field) => field.type === "reference"
+              (field: any) => field.type === "reference"
             );
             if (!!typeReference) {
               const to = typeReference.to.type;
@@ -244,7 +244,7 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
       queryFields.push(
         `${findName}(id: ID!): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
       );
-      resolvers.Query[`${findName}`] = async (_parent, input) => {
+      resolvers.Query[`${findName}`] = async (_parent: any, input: any) => {
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
 
@@ -263,11 +263,11 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 
       // 新增字段解析 比如 Author 要实现 对 posts 的解析
       resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};
-      type.fields.forEach((field) => {
+      type.fields.forEach((field: any) => {
         if (field.type == "reference") {
           resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
             field.to.type
-          ] = async (parent, _input) => {
+          ] = async (parent: any, _input: any) => {
             const Model =
               models?.[
                 field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1)
@@ -278,11 +278,11 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         if (
           field.type === "array" &&
           field.of.length > 0 &&
-          field.of.some((o) => o.type === "reference")
+          field.of.some((o: any) => o.type === "reference")
         ) {
           resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
             field.of[0].to.type + "s"
-          ] = async (parent, { offset, limit }, context) => {
+          ] = async (parent: any, { offset, limit }: any, context: any) => {
             console.log("context", context);
             const Model =
               models?.[
@@ -324,8 +324,8 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
 };
 
 // sort 转 mongoose sort
-function flattenSort(criteria, prefix = "") {
-  let flattened = {};
+function flattenSort(criteria: any, prefix = "") {
+  let flattened: any = {};
   for (let key in criteria) {
     if (criteria.hasOwnProperty(key)) {
       const value = criteria[key];
@@ -340,13 +340,13 @@ function flattenSort(criteria, prefix = "") {
   return flattened;
 }
 
-function convertToMongooseFilter(criteria) {
-  const mongooseFilter = {};
+function convertToMongooseFilter(criteria: any) {
+  const mongooseFilter: any = {};
 
   for (const key in criteria) {
     if (criteria.hasOwnProperty(key)) {
       const fieldCriteria = criteria[key];
-      const fieldFilter = {};
+      const fieldFilter: any = {};
 
       for (const op in fieldCriteria) {
         if (fieldCriteria.hasOwnProperty(op) && fieldCriteria[op] !== null) {

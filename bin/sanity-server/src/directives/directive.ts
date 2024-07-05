@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { defaultFieldResolver } from "graphql";
 import { MapperKind, mapSchema } from "@graphql-tools/utils";
 
@@ -9,7 +10,7 @@ export function ExtendDirective() {
       directive @nth(index: Int!) on FIELD \n 
       directive @watermark(content: String!) on FIELD \n 
     `,
-    DirectiveTransformer: (schema) => {
+    DirectiveTransformer: (schema: any) => {
       return mapSchema(schema, {
         [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
           const { resolve = defaultFieldResolver } = fieldConfig;
@@ -30,7 +31,7 @@ export function ExtendDirective() {
                 context.nthIndex = indexValue;
               }
             }
-            let result = await resolve(source, args, context, info);
+            let result: any = await resolve(source, args, context, info);
             const transformDirective = fieldNode.directives?.find(
               (directive) => directive.name.value === "transform"
             );
@@ -39,13 +40,13 @@ export function ExtendDirective() {
                 (arg) => arg.name.value === "width"
               );
 
-              const widthValue = widthArg
+              const widthValue: any = widthArg
                 ? info.variableValues?.[widthArg.value.name.value]
                 : null;
               const heightArg = transformDirective.arguments?.find(
                 (arg) => arg.name.value === "height"
               );
-              const heightValue = heightArg
+              const heightValue: any = heightArg
                 ? info.variableValues?.[heightArg.value.name.value]
                 : null;
               if (heightValue || widthValue) {
@@ -79,7 +80,7 @@ export function ExtendDirective() {
                 (arg) => arg.name.value === "content"
               );
 
-              const watermarkValue = watermarkArg
+              const watermarkValue:any = watermarkArg
                 ? info.variableValues?.[watermarkArg.value.name.value]
                 : null;
 

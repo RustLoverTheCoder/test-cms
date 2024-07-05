@@ -117,26 +117,26 @@ input SanityFileAssetSorting {
 
   `;
 
-  const resolvers = { Query: {}, Mutation: {} };
+  const resolvers: any = { Query: {}, Mutation: {} };
 
-  const queryFields = [];
-  const mutaionFields = [];
+  const queryFields: any = [];
+  const mutaionFields: any = [];
 
   queryFields.push(`
     SanityFileAsset(id: ID!): SanityFileAsset
     allSanityFileAsset(where: SanityFileAssetFilter,sort: [SanityFileAssetSorting!],limit: Int,offset: Int): [SanityFileAsset!]
 `);
 
-  resolvers.Query.SanityFileAsset = async (_parent, input) => {
+  resolvers.Query.SanityFileAsset = async (_parent: any, input: any) => {
     // const Model = models?.["file"];
     // 还需要生成mongoose
     return null;
   };
 
   resolvers.Query.allSanityFileAsset = async (
-    _,
-    { where, sort, offset, limit },
-    _context
+    _: any,
+    { where, sort, offset, limit }: any,
+    _context: any
   ) => {
     console.log("allSanityFileAsset", where, sort, offset, limit);
     return [];

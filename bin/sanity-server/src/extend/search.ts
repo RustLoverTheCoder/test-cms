@@ -26,7 +26,7 @@ export const SearchExtend = () => {
         }
     `,
     SearchQuery: {
-      searchCollectionPoints(_parent, { input }) {
+      searchCollectionPoints(_parent: any, { input }: any) {
         console.log("input", input);
         return [
           "https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.png",
