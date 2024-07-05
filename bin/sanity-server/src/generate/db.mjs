@@ -33,8 +33,26 @@ const convertFieldTypeToMongoose = (field) => {
         type: mongoose.Schema.Types.ObjectId,
         ref: field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1),
       };
+    case "datetime":
+      return { type: Date };
+    case "date":
+      return { type: Date };
+    case "file":
+      return { type: String };
+    case "geopoint":
+      return { type: String };
     case "number":
       return { type: Number };
+    case "object":
+      return { type: String };
+    case "text":
+      return { type: String };
+    case "url":
+      return { type: String };
+    case "blockContent":
+      return { type: String };
+    case "boolen":
+      return { type: Boolean };
     default:
       return { type: String }; // Default to String if type is not explicitly handled
   }

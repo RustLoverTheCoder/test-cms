@@ -198,16 +198,29 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         { where, sort, offset, limit },
         _context
       ) => {
-        console.log("where", where);
-        console.log("sort", sort);
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         let query = Model.find();
+        // 我们没有草稿
+        if (!!where?._?.is_draft) {
+          return [];
+        }
+
         // filter
         if (!!where) {
           const mongooseFilter = convertToMongooseFilter(where);
           console.log("mongooseFilter", mongooseFilter);
-          query = Model.find(mongooseFilter);
+          query = Model.find(mongooseFilter).populate("assetObject");
+
+          if (!!where?._?.references) {
+            const typeReference = type.fields.find(
+              (field) => field.type === "reference"
+            );
+            if (!!typeReference) {
+              const to = typeReference.to.type;
+              query = query.where(to).equals(where._.references);
+            }
+          }
         }
         // sort
         if (!!sort) {
@@ -247,44 +260,6 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
         resolvers.Mutation,
         mutationResolvers.Mutation
       );
-
-      // const createName = `create_${type.name}`;
-      // mutaionFields.push(
-      //   `${createName}(input: ${type.name.charAt(0).toUpperCase() + type.name.slice(1) + "Input"}): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
-      // );
-      // resolvers.Mutation[createName] = async (_parent, { input }) => {
-      //   const Model =
-      //     models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
-      //   const model = new Model({
-      //     _type: type.name,
-      //     _createdAt: new Date(),
-      //     _updatedAt: new Date(),
-      //     ...input,
-      //   });
-      //   await model.save();
-      //   // post 关联 author, 需要更新
-      //   let typeReference = type.fields.find(
-      //     (field) => field.type === "reference"
-      //   );
-      //   if (!!typeReference) {
-      //     const to = typeReference.to.type;
-      //     const referenceModel =
-      //       models?.[to.charAt(0).toUpperCase() + to.slice(1)];
-      //     const id = input?.[to];
-      //     const modelId = model._id.toString();
-      //     await referenceModel.findByIdAndUpdate(
-      //       id,
-      //       {
-      //         $push: { [`${type.name.toLowerCase()}s`]: modelId },
-      //       },
-      //       { new: true }
-      //     );
-      //   }
-
-      //   let query = model;
-
-      //   return query;
-      // };
 
       // 新增字段解析 比如 Author 要实现 对 posts 的解析
       resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};
@@ -339,18 +314,6 @@ export const generateTypeDefsAndResolvers = (schema, schemaTypes) => {
     if (type.type === "object") {
     }
   });
-
-  // typeDefs.push(`
-  //     type Query {
-  //       ${queryFields.join("\n  ")}
-  //     }
-
-  //     type Mutation {
-  //       ${mutaionFields.join("\n  ")}
-  //     }
-  //   `);
-
-  // console.log("resolvers", resolvers);
 
   return {
     typeDefs: typeDefs.join("\n"),
@@ -436,3 +399,81 @@ function convertToMongooseFilter(criteria) {
 
   return mongooseFilter;
 }
+
+// function convertToMongooseFilter(criteria) {
+//   const mongooseFilter = {};
+
+//   function processCriteria(criteria, parentKey = "") {
+//     for (const key in criteria) {
+//       if (criteria.hasOwnProperty(key)) {
+//         const fieldCriteria = criteria[key];
+//         if (
+//           typeof fieldCriteria === "object" &&
+//           !Array.isArray(fieldCriteria) &&
+//           fieldCriteria !== null &&
+//           !fieldCriteria.hasOwnProperty("eq") &&
+//           !fieldCriteria.hasOwnProperty("neq")
+//         ) {
+//           console.log(
+//             "1",
+//             fieldCriteria,
+//             parentKey ? `${parentKey}.${key}` : key
+//           );
+//           processCriteria(
+//             fieldCriteria,
+//             parentKey ? `${parentKey}.${key}` : key
+//           );
+//         } else {
+//           const fieldFilter = {};
+//           for (const op in criteria) {
+//             if (criteria.hasOwnProperty(op) && criteria[op] !== null) {
+//               switch (op) {
+//                 case "eq":
+//                   fieldFilter["$eq"] = criteria[op];
+//                   break;
+//                 case "neq":
+//                   fieldFilter["$ne"] = criteria[op];
+//                   break;
+//                 case "matches":
+//                   fieldFilter["$regex"] = criteria[op];
+//                   break;
+//                 case "in":
+//                   fieldFilter["$in"] = criteria[op];
+//                   break;
+//                 case "nin":
+//                   fieldFilter["$nin"] = criteria[op];
+//                   break;
+//                 case "gt":
+//                   fieldFilter["$gt"] = criteria[op];
+//                   break;
+//                 case "gte":
+//                   fieldFilter["$gte"] = criteria[op];
+//                   break;
+//                 case "lt":
+//                   fieldFilter["$lt"] = criteria[op];
+//                   break;
+//                 case "lte":
+//                   fieldFilter["$lte"] = criteria[op];
+//                   break;
+//                 case "is_defined":
+//                   fieldFilter["$exists"] = criteria[op];
+//                   break;
+//                 default:
+//                   break;
+//               }
+//             }
+//           }
+
+//           if (Object.keys(fieldFilter).length > 0) {
+//             mongooseFilter[parentKey ? `${parentKey}.${key}` : key] =
+//               fieldFilter;
+//           }
+//         }
+//       }
+//     }
+//   }
+
+//   processCriteria(criteria);
+
+//   return mongooseFilter;
+// }

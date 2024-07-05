@@ -247,6 +247,7 @@ export const generateMutations = (type, fields, models) => {
           const { id } = input;
           const Model = models?.[name];
           await Model.findByIdAndDelete(id);
+          // todo 删除需要把关联的给删除，因为是强绑定 除非weak：true
           return "Deleted successfully";
         },
         [`patch${name}`]: async (_parent, { input }) => {
