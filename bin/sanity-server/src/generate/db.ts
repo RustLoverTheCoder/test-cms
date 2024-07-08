@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { FieldType } from "src/@types";
 
-const convertFieldTypeToMongoose: any = (field: any) => {
+const convertFieldTypeToMongoose: any = (field: FieldType) => {
   switch (field.type) {
     case "string":
       return { type: String };
@@ -50,7 +51,7 @@ const convertFieldTypeToMongoose: any = (field: any) => {
       return { type: String };
     case "blockContent":
       return { type: String };
-    case "boolen":
+    case "boolean":
       return { type: Boolean };
     default:
       return { type: String }; // Default to String if type is not explicitly handled

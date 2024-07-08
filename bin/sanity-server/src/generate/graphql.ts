@@ -32,7 +32,7 @@ const convertGraphqlFieldType = (field: any) => {
       return "String";
     case "blockContent":
       return "JSON";
-    case "boolen":
+    case "boolean":
       return "Boolean";
     default:
       return "String";
