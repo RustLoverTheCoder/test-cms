@@ -26,8 +26,8 @@ const convertGraphqlFieldType: any = (field: FieldType) => {
       return "Geopoint";
     case "number":
       return "Float";
-    case "object":
-      return "String"; // todo object
+    // case "object":
+    //   return "String"; // todo object
     case "text":
       return "String";
     case "url":
@@ -62,8 +62,8 @@ const convertGraphqlFilterType = (field: FieldType) => {
       return "GeopointFilter";
     case "number":
       return "FloatFilter";
-    case "object":
-      return "StringFilter"; // todo objectFilter
+    // case "object":
+    //   return "StringFilter"; // todo objectFilter
     case "text":
       return "StringFilter";
     case "url":
@@ -94,8 +94,8 @@ const convertGraphqlSortOrderType = (field: FieldType) => {
       return "GeopointSorting";
     case "number":
       return "SortOrder";
-    case "object":
-      return "SortOrder"; // todo ObjectSorting
+    // case "object":
+    //   return "SortOrder"; // todo ObjectSorting
     case "text":
       return "SortOrder";
     case "url":

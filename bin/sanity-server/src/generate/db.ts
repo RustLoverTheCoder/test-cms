@@ -50,8 +50,8 @@ function convertFieldTypeToMongoose(field: FieldType) {
       return { type: mongoose.Schema.Types.String };
     case "number":
       return { type: mongoose.Schema.Types.Number };
-    case "object":
-      return { type: mongoose.Schema.Types.String };
+    // case "object":
+    //   return { type: mongoose.Schema.Types.String };
     case "text":
       return { type: mongoose.Schema.Types.String };
     case "url":

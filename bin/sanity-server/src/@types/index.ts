@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { objectTypes } from "../schemaTypes";
+
+type ObjectTypes = (typeof objectTypes)[number];
 
 export type SchemaType =
   | "string"
@@ -8,11 +11,11 @@ export type SchemaType =
   | "date"
   | "geopoint"
   | "number"
-  | "object"
   | "text"
   | "url"
   | "blockContent"
-  | "boolean";
+  | "boolean"
+  | ObjectTypes;
 
 type ArrayOfType =
   | {
@@ -56,6 +59,13 @@ export type SanityDocumentType = {
   name: String;
   title: String;
   type: "document";
+  fields: FieldType[];
+};
+
+export type SanityObjectType = {
+  name: String;
+  title: String;
+  type: "object";
   fields: FieldType[];
 };
 
