@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { FieldType, MongooseField } from "src/@types";
+import { schemaTypes as SchemaTypes } from "../schemaTypes";
 
 function convertFieldTypeToMongoose(field: FieldType): MongooseField;
 function convertFieldTypeToMongoose(field: FieldType) {
@@ -64,9 +65,9 @@ function convertFieldTypeToMongoose(field: FieldType) {
   }
 }
 
-export const generateMongooseModels = (schemaTypes: any) => {
+export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
   const models: any = {};
-  schemaTypes.forEach((type: any) => {
+  schemaTypes.forEach((type) => {
     if (type.type === "document") {
       const fields = type.fields.reduce((acc: any, field: any) => {
         acc[field.name] = convertFieldTypeToMongoose(field);
