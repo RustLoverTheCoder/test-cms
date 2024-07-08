@@ -55,7 +55,7 @@ const {
 } = generateImageTypeDefsAndResolvers();
 
 const { typeDefs, resolvers, queryFields, mutaionFields } =
-  generateTypeDefsAndResolvers(schema, schemaTypes);
+  generateTypeDefsAndResolvers(schemaTypes);
 
 // extend
 const { SearchTypeDefs, SearchQuery, SearchQueryFields } = SearchExtend();

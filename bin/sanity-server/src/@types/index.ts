@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 export type SchemaType =
   | "string"
   | "slug"
@@ -56,3 +58,12 @@ export type SanityDocumentType = {
   type: "document";
   fields: FieldType[];
 };
+
+export type MongooseField =
+  | { type: typeof mongoose.Schema.Types.String }
+  | { type: typeof mongoose.Schema.Types.ObjectId; ref: string }
+  | { type: typeof mongoose.Schema.Types.Date }
+  | { type: typeof mongoose.Schema.Types.Number }
+  | { type: typeof mongoose.Schema.Types.Boolean }
+  | MongooseField[]
+  | {};

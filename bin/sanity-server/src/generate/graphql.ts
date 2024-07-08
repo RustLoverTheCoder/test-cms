@@ -1,8 +1,10 @@
 import { generateMongooseModels } from "./db";
 import { DocumentInterfaceFields } from "../interface/document";
 import { generateMutations } from "./mutation";
+import { schema as Schema, schemaTypes as SchemaTypes } from "../schemaTypes";
+import { FieldType } from "src/@types";
 
-const convertGraphqlFieldType = (field: any) => {
+const convertGraphqlFieldType: any = (field: FieldType) => {
   switch (field.type) {
     case "string":
       return "String";
@@ -40,7 +42,7 @@ const convertGraphqlFieldType = (field: any) => {
 };
 
 // array blockContent 没有
-const convertGraphqlFilterType = (field: any) => {
+const convertGraphqlFilterType = (field: FieldType) => {
   switch (field.type) {
     case "string":
       return "StringFilter";
@@ -74,7 +76,7 @@ const convertGraphqlFilterType = (field: any) => {
 };
 
 // array reference blockContent 没有
-const convertGraphqlSortOrderType = (field: any) => {
+const convertGraphqlSortOrderType = (field: FieldType) => {
   switch (field.type) {
     case "string":
       return "SortOrder";
@@ -103,8 +105,10 @@ const convertGraphqlSortOrderType = (field: any) => {
   }
 };
 
-export const generateTypeDefsAndResolvers = (schema: any, schemaTypes: any) => {
-  const models = generateMongooseModels(schema, schemaTypes);
+export const generateTypeDefsAndResolvers = (
+  schemaTypes: typeof SchemaTypes
+) => {
+  const models = generateMongooseModels(schemaTypes);
   console.log("models", models);
 
   const typeDefs: any = [];

@@ -1,14 +1,18 @@
 import mongoose from "mongoose";
-import { FieldType } from "src/@types";
+import { FieldType, MongooseField } from "src/@types";
 
-const convertFieldTypeToMongoose: any = (field: FieldType) => {
+function convertFieldTypeToMongoose(field: FieldType): MongooseField;
+function convertFieldTypeToMongoose(field: FieldType) {
   switch (field.type) {
     case "string":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "slug":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "image":
-      return { type: String }; // You might want to store just the URL or a reference to a file
+      return {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Image",
+      };
     case "array":
       if (field.of && field.of.length > 0) {
         // 处理数组内部的类型
@@ -23,10 +27,12 @@ const convertFieldTypeToMongoose: any = (field: FieldType) => {
             },
           ];
         } else {
-          return [convertFieldTypeToMongoose(arrayType)];
+          return [
+            convertFieldTypeToMongoose({ ...arrayType, name: "", title: "" }),
+          ];
         }
       } else {
-        return [String]; // 默认返回字符串数组
+        return [{ type: mongoose.Schema.Types.String }];
       }
     case "reference":
       return {
@@ -34,33 +40,32 @@ const convertFieldTypeToMongoose: any = (field: FieldType) => {
         ref: field.to.type.charAt(0).toUpperCase() + field.to.type.slice(1),
       };
     case "datetime":
-      return { type: Date };
+      return { type: mongoose.Schema.Types.Date };
     case "date":
-      return { type: Date };
+      return { type: mongoose.Schema.Types.Date };
     case "file":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "geopoint":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "number":
-      return { type: Number };
+      return { type: mongoose.Schema.Types.Number };
     case "object":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "text":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "url":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "blockContent":
-      return { type: String };
+      return { type: mongoose.Schema.Types.String };
     case "boolean":
-      return { type: Boolean };
+      return { type: mongoose.Schema.Types.Boolean };
     default:
-      return { type: String }; // Default to String if type is not explicitly handled
+      return { type: mongoose.Schema.Types.String }; // Default to String if type is not explicitly handled
   }
-};
+}
 
-export const generateMongooseModels = (schema: any, schemaTypes: any) => {
+export const generateMongooseModels = (schemaTypes: any) => {
   const models: any = {};
-
   schemaTypes.forEach((type: any) => {
     if (type.type === "document") {
       const fields = type.fields.reduce((acc: any, field: any) => {
