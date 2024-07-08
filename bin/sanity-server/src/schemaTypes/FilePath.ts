@@ -1,4 +1,6 @@
-export const FilePath = {
+import { SanityDocumentType } from "src/@types";
+
+export const FilePath: SanityDocumentType = {
   name: "filePath",
   title: "FilePath",
   type: "document",

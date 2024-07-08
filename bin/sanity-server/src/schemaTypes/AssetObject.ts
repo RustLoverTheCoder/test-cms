@@ -1,4 +1,6 @@
-export const AssetObject = {
+import { SanityDocumentType } from "src/@types";
+
+export const AssetObject:SanityDocumentType = {
   name: "assetObject",
   title: "AssetObject",
   type: "document",

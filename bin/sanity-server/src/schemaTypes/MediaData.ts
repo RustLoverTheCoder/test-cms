@@ -1,4 +1,6 @@
-export const MediaData = {
+import { SanityDocumentType } from "src/@types";
+
+export const MediaData: SanityDocumentType = {
   name: "mediaData",
   title: "MediaData",
   type: "document",

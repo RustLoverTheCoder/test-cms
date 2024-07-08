@@ -3,10 +3,15 @@ import { Schema } from "@sanity/schema";
 import { AssetObject } from "./AssetObject";
 import { FilePath } from "./FilePath";
 import { MediaData } from "./MediaData";
+import { SanityDocumentType } from "src/@types";
 
-export const schemaTypes = [AssetObject, FilePath, MediaData];
+export const schemaTypes: SanityDocumentType[] = [
+  AssetObject,
+  FilePath,
+  MediaData,
+];
 
 export const schema = new Schema({
-  name: "test",
+  name: "cms",
   types: schemaTypes,
 });
