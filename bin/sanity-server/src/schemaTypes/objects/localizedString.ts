@@ -10,7 +10,6 @@ export const LocalizedString: SanityObjectType = {
       name: lang.id,
       title: lang.title,
       type: "string",
-      fieldset: lang.isDefault ? undefined : "translations",
     };
   }),
 };

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const convertGraphqlInputFieldType = (field:any) => {
+const convertGraphqlInputFieldType = (field: any) => {
   switch (field.type) {
     case "string":
       return "String";
@@ -9,7 +9,7 @@ const convertGraphqlInputFieldType = (field:any) => {
     case "image":
       return "ID";
     case "array":
-      return `[${field.of.map((ofType:any) => convertGraphqlInputFieldType(ofType)).join(", ")}]`;
+      return `[${field.of.map((ofType: any) => convertGraphqlInputFieldType(ofType)).join(", ")}]`;
     case "reference":
       return "ID";
     case "datetime":
@@ -33,15 +33,15 @@ const convertGraphqlInputFieldType = (field:any) => {
     case "boolean":
       return "Boolean";
     default:
-      return "String";
+      return field.type.charAt(0).toUpperCase() + field.type.slice(1) + "Input";
   }
 };
 
-export const generateMutations = (type:any, fields:any, models:any) => {
+export const generateMutations = (type: any, fields: any, models: any) => {
   const name = type.charAt(0).toUpperCase() + type.slice(1);
 
   const createInputFields = fields
-    .map((field:any) => {
+    .map((field: any) => {
       if (field.type !== "array") {
         const fieldType = convertGraphqlInputFieldType(field);
         return `${field.name}: ${fieldType}`;
@@ -51,27 +51,27 @@ export const generateMutations = (type:any, fields:any, models:any) => {
 
   // 删除字段
   const patchUnsetInputFields = fields
-    .map((field:any) => {
+    .map((field: any) => {
       return `${field.name}: String`;
     })
     .join("\n    ");
 
-  const hasNumberField = fields.some((field:any) => field.type === "number");
+  const hasNumberField = fields.some((field: any) => field.type === "number");
 
   // 数字字段
   const patchDecOrIncInputFields = fields
-    .map((field:any) => {
+    .map((field: any) => {
       if (field.type == "number") {
         return `${field.name}: Float`;
       }
     })
     .join("\n    ");
 
-  const hasArrayField = fields.some((field:any) => field.type === "array");
+  const hasArrayField = fields.some((field: any) => field.type === "array");
 
   // 数组字段
   const patchInsertFields = fields
-    .map((field:any) => {
+    .map((field: any) => {
       if (field.type == "array") {
         return `${field.name}: ID`; //todo 不止关联id
       }
@@ -165,10 +165,67 @@ export const generateMutations = (type:any, fields:any, models:any) => {
       `,
     resolvers: {
       Mutation: {
-        [`create${name}`]: async (_parent:any, { input }:any) => {
+        [`create${name}`]: async (_parent: any, { input }: any) => {
           const { _id, ...arg } = input;
+          // 这里不能一下子全塞进去了，object引用也要考虑
+          console.log("arg", arg);
+          // 找到object类型
+          const objectTypeListField: any[] = [];
+          fields.forEach((field: any) => {
+            if (
+              field.type !== "string" &&
+              field.type !== "slug" &&
+              field.type !== "image" &&
+              field.type !== "array" &&
+              field.type !== "reference" &&
+              field.type !== "datetime" &&
+              field.type !== "date" &&
+              field.type !== "file" &&
+              field.type !== "geopoint" &&
+              field.type !== "number" &&
+              field.type !== "object" &&
+              field.type !== "text" &&
+              field.type !== "url" &&
+              field.type !== "blockContent" &&
+              field.type !== "boolean"
+            ) {
+              objectTypeListField.push(field);
+            }
+          });
+          const inputObjectList: string[] = [];
+          if (objectTypeListField.length > 0) {
+            objectTypeListField.forEach((field) => {
+              if (!!arg?.[field.name]) {
+                inputObjectList.push(field.name);
+              }
+            });
+          }
+
+          const inputObjectModels: any = {};
+
+          if (inputObjectList.length > 0) {
+            inputObjectList.forEach(async (inputObject) => {
+              const inputObjectType = objectTypeListField.find(
+                (field) => field.name === inputObject
+              );
+              const InputObjectModel =
+                models?.[
+                  inputObjectType.type.charAt(0).toUpperCase() +
+                    inputObjectType.type.slice(1)
+                ];
+              const inputObjectModel = new InputObjectModel({
+                ...arg?.[inputObject],
+              });
+              inputObjectModels[inputObject] = inputObjectModel._id;
+              await inputObjectModel.save();
+            });
+          }
 
           const Model = models?.[name];
+
+          inputObjectList.forEach((i) => {
+            delete arg[i];
+          });
 
           const model = new Model({
             _id: _id
@@ -177,11 +234,12 @@ export const generateMutations = (type:any, fields:any, models:any) => {
             _type: type,
             _createdAt: new Date(),
             _updatedAt: new Date(),
+            ...inputObjectModels,
             ...arg,
           });
 
           const typeReference = fields.find(
-            (field:any) => field.type === "reference"
+            (field: any) => field.type === "reference"
           );
 
           if (!!typeReference) {
@@ -210,7 +268,7 @@ export const generateMutations = (type:any, fields:any, models:any) => {
           await model.save();
           return model;
         },
-        [`createOrReplace${name}`]: async (_parent:any, { input }:any) => {
+        [`createOrReplace${name}`]: async (_parent: any, { input }: any) => {
           const { _id, ...arg } = input;
           const Model = models?.[name];
           const model = await Model.findByIdAndUpdate(
@@ -224,7 +282,7 @@ export const generateMutations = (type:any, fields:any, models:any) => {
           );
           return model;
         },
-        [`createIfNotExists${name}`]: async (_parent:any, { input }:any) => {
+        [`createIfNotExists${name}`]: async (_parent: any, { input }: any) => {
           const { _id, ...arg } = input;
           const Model = models?.[name];
           const existingModel = await Model.findById(_id);
@@ -243,17 +301,17 @@ export const generateMutations = (type:any, fields:any, models:any) => {
           await model.save();
           return model;
         },
-        [`delete${name}`]: async (_parent:any, { input }:any) => {
+        [`delete${name}`]: async (_parent: any, { input }: any) => {
           const { id } = input;
           const Model = models?.[name];
           await Model.findByIdAndDelete(id);
           // todo 删除需要把关联的给删除，因为是强绑定 除非weak：true
           return "Deleted successfully";
         },
-        [`patch${name}`]: async (_parent:any, { input }:any) => {
+        [`patch${name}`]: async (_parent: any, { input }: any) => {
           const { id, set, setIfMissing, unset, inc, dec, insert } = input;
           const Model = models?.[name];
-          const updateFields:any = {};
+          const updateFields: any = {};
           if (set) updateFields.$set = set;
           if (setIfMissing) updateFields.$setOnInsert = setIfMissing;
 

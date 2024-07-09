@@ -37,7 +37,8 @@ const convertGraphqlFieldType: any = (field: FieldType) => {
     case "boolean":
       return "Boolean";
     default:
-      return "String";
+      // 给 object 使用
+      return field.type.charAt(0).toUpperCase() + field.type.slice(1);
   }
 };
 
@@ -316,6 +317,38 @@ export const generateTypeDefsAndResolvers = (
     }
     // object
     if (type.type === "object") {
+      const fields = type.fields
+        .map((field: any) => {
+          const fieldType = convertGraphqlFieldType(field);
+          let key = field.name;
+          if (field.type === "array") {
+            key = `${field.name}(offset: Int, limit: Int)`;
+          }
+          return `${key}: ${fieldType}`;
+        })
+        .join("\n    ");
+
+      const {
+        typeDefs: MutationTypeDefs,
+        mutaionField,
+        resolvers: mutationResolvers,
+      } = generateMutations(type.name, type.fields, models);
+
+      typeDefs.push(`
+        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Input {
+          ${fields}
+        }
+        ${MutationTypeDefs}
+        type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} {
+          ${fields}
+        }
+          `);
+
+      mutaionFields.push(`${mutaionField}`);
+      resolvers.Mutation = Object.assign(
+        resolvers.Mutation,
+        mutationResolvers.Mutation
+      );
     }
   });
 

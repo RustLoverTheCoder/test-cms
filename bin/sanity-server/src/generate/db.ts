@@ -61,7 +61,11 @@ function convertFieldTypeToMongoose(field: FieldType) {
     case "boolean":
       return { type: mongoose.Schema.Types.Boolean };
     default:
-      return { type: mongoose.Schema.Types.String }; // Default to String if type is not explicitly handled
+      // object
+      return {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: field.type.charAt(0).toUpperCase() + field.type.slice(1),
+      };
   }
 }
 
@@ -89,7 +93,21 @@ export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
       fields["_rev"] = {
         type: String,
       };
-      console.log("MongooseModels", type.name, fields);
+
+      const schemaDefinition = new mongoose.Schema(fields);
+      models[type.name.charAt(0).toUpperCase() + type.name.slice(1)] =
+        mongoose.model(
+          type.name.charAt(0).toUpperCase() + type.name.slice(1),
+          schemaDefinition
+        );
+    }
+
+    if (type.type === "object") {
+      // 也要一个模型
+      const fields = type.fields.reduce((acc: any, field: any) => {
+        acc[field.name] = convertFieldTypeToMongoose(field);
+        return acc;
+      }, {});
       const schemaDefinition = new mongoose.Schema(fields);
       models[type.name.charAt(0).toUpperCase() + type.name.slice(1)] =
         mongoose.model(
@@ -98,6 +116,8 @@ export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
         );
     }
   });
+
+  console.log("models", models);
 
   return models;
 };
