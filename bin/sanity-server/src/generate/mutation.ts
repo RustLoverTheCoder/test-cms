@@ -165,7 +165,7 @@ export const generateMutations = (type: any, fields: any, models: any) => {
       `,
     resolvers: {
       Mutation: {
-        [`create${name}`]: async (_parent: any, { input }: any) => {
+        [`create${name}`]: async (_parent: null, { input }: any) => {
           const { _id, ...arg } = input;
           // 这里不能一下子全塞进去了，object引用也要考虑
           console.log("arg", arg);
@@ -268,7 +268,7 @@ export const generateMutations = (type: any, fields: any, models: any) => {
           await model.save();
           return model;
         },
-        [`createOrReplace${name}`]: async (_parent: any, { input }: any) => {
+        [`createOrReplace${name}`]: async (_parent: null, { input }: any) => {
           const { _id, ...arg } = input;
           const Model = models?.[name];
           const model = await Model.findByIdAndUpdate(
@@ -282,13 +282,14 @@ export const generateMutations = (type: any, fields: any, models: any) => {
           );
           return model;
         },
-        [`createIfNotExists${name}`]: async (_parent: any, { input }: any) => {
+        [`createIfNotExists${name}`]: async (_parent: null, { input }: any) => {
           const { _id, ...arg } = input;
           const Model = models?.[name];
           const existingModel = await Model.findById(_id);
           if (existingModel) {
             return existingModel;
           }
+          // 通用创建
           const model = new Model({
             _id: _id
               ? new mongoose.Types.ObjectId(_id)
@@ -301,14 +302,14 @@ export const generateMutations = (type: any, fields: any, models: any) => {
           await model.save();
           return model;
         },
-        [`delete${name}`]: async (_parent: any, { input }: any) => {
+        [`delete${name}`]: async (_parent: null, { input }: any) => {
           const { id } = input;
           const Model = models?.[name];
           await Model.findByIdAndDelete(id);
           // todo 删除需要把关联的给删除，因为是强绑定 除非weak：true
           return "Deleted successfully";
         },
-        [`patch${name}`]: async (_parent: any, { input }: any) => {
+        [`patch${name}`]: async (_parent: null, { input }: any) => {
           const { id, set, setIfMissing, unset, inc, dec, insert } = input;
           const Model = models?.[name];
           const updateFields: any = {};
