@@ -269,6 +269,7 @@ export const generateTypeDefsAndResolvers = (
       // 新增字段解析 比如 Author 要实现 对 posts 的解析
       resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)] = {};
       type.fields.forEach((field: any) => {
+        // 引用
         if (field.type == "reference") {
           resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
             field.to.type
@@ -280,6 +281,7 @@ export const generateTypeDefsAndResolvers = (
             return await Model.findById(parent[field.to.type]);
           };
         }
+        // 数组引用
         if (
           field.type === "array" &&
           field.of.length > 0 &&
@@ -309,6 +311,34 @@ export const generateTypeDefsAndResolvers = (
             }
 
             return await query;
+          };
+        }
+        // object
+        if (
+          field.type !== "string" &&
+          field.type !== "slug" &&
+          field.type !== "image" &&
+          field.type !== "array" &&
+          field.type !== "reference" &&
+          field.type !== "datetime" &&
+          field.type !== "date" &&
+          field.type !== "file" &&
+          field.type !== "geopoint" &&
+          field.type !== "number" &&
+          field.type !== "object" &&
+          field.type !== "text" &&
+          field.type !== "url" &&
+          field.type !== "blockContent" &&
+          field.type !== "boolean"
+        ) {
+          resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
+            field.name
+          ] = async (parent: any, _input: any) => {
+            const Model =
+              models?.[
+                field.type.charAt(0).toUpperCase() + field.type.slice(1)
+              ];
+            return await Model.findById(parent[field.name]);
           };
         }
       });
