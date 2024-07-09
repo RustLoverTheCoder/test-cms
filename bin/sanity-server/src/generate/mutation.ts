@@ -271,6 +271,7 @@ export const generateMutations = (type: any, fields: any, models: any) => {
         [`createOrReplace${name}`]: async (_parent: null, { input }: any) => {
           const { _id, ...arg } = input;
           const Model = models?.[name];
+          // todo object问题
           const model = await Model.findByIdAndUpdate(
             _id,
             {
@@ -307,6 +308,7 @@ export const generateMutations = (type: any, fields: any, models: any) => {
           const Model = models?.[name];
           await Model.findByIdAndDelete(id);
           // todo 删除需要把关联的给删除，因为是强绑定 除非weak：true
+          // todo 删除object的关联
           return "Deleted successfully";
         },
         [`patch${name}`]: async (_parent: null, { input }: any) => {
