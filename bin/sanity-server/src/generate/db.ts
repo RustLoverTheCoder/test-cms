@@ -70,7 +70,21 @@ function convertFieldTypeToMongoose(field: FieldType) {
 }
 
 export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
-  const models: any = {};
+  // 默认有一个用户权限
+  const userPermissionSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    documentType: { type: String, required: true },
+    documentId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    canRead: { type: Boolean, default: false },
+    canWrite: { type: Boolean, default: false },
+  });
+
+  const models: any = {
+    UserPermissionSchema: mongoose.model(
+      "UserPermissionSchema",
+      userPermissionSchema
+    ),
+  };
   schemaTypes.forEach((type) => {
     if (type.type === "document") {
       const fields = type.fields.reduce((acc: any, field: any) => {

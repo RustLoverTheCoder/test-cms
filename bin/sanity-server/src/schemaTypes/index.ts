@@ -7,11 +7,12 @@ import { LocalizedString } from "./objects/localizedString";
 import { User } from "./user";
 import { SanityDocumentType, SanityObjectType } from "src/@types";
 
+// 必须有user
 export const schemaTypes: (SanityDocumentType | SanityObjectType)[] = [
+  User,
   AssetObject,
   FilePath,
   MediaData,
-  User,
   LocalizedString,
 ];
 
