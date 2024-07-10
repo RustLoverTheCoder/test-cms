@@ -6,6 +6,9 @@ import gql from "graphql-tag";
 // scalar
 import GraphQLJSON from "graphql-type-json";
 
+// jwt
+import jwt from "jsonwebtoken";
+
 // @ts-ignore
 import GraphQLDateTime from "graphql-type-datetime";
 import GraphQLDate from "./scalars/date";
@@ -30,6 +33,7 @@ import { FilterInput } from "./filter/filter";
 import { SortOrderFilter } from "./filter/sortOrder";
 
 import { SearchExtend } from "./extend/search";
+import { generateMongooseModels } from "./generate/db";
 
 const MONGODB_URI = "mongodb://admin:admin@localhost:27017";
 
@@ -54,8 +58,11 @@ const {
   mutaionFields: imageMutaionFields,
 } = generateImageTypeDefsAndResolvers();
 
+// 生成mongo model
+const models = generateMongooseModels(schemaTypes);
+
 const { typeDefs, resolvers, queryFields, mutaionFields } =
-  generateTypeDefsAndResolvers(schemaTypes);
+  generateTypeDefsAndResolvers(schemaTypes, models);
 
 // extend
 const { SearchTypeDefs, SearchQuery, SearchQueryFields } = SearchExtend();
@@ -141,6 +148,16 @@ mongoose
     console.log("MongoDB Connected Successfully");
     return startStandaloneServer(server, {
       listen: { port: 4006 },
+      context: async ({ req, res }: any) => {
+        // Get the user token from the headers.
+        const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
+
+        const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
+        console.log("decoded", decoded);
+        // const user = await getUser(token);
+        // @ts-ignore
+        return { user_id: decoded.user_id }; //todo ts
+      },
     });
   })
   .then((res) => {

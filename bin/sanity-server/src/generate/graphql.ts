@@ -107,9 +107,10 @@ const convertGraphqlSortOrderType = (field: FieldType) => {
 };
 
 export const generateTypeDefsAndResolvers = (
-  schemaTypes: typeof SchemaTypes
+  schemaTypes: typeof SchemaTypes,
+  models: any
 ) => {
-  const models = generateMongooseModels(schemaTypes);
+  // const models = generateMongooseModels(schemaTypes);
   console.log("models", models);
 
   const typeDefs: any = [];
