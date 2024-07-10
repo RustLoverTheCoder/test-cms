@@ -1,6 +1,6 @@
 import { SanityDocumentType } from "src/@types";
 
-export const AssetObject:SanityDocumentType = {
+export const AssetObject: SanityDocumentType = {
   name: "assetObject",
   title: "AssetObject",
   type: "document",
@@ -32,11 +32,5 @@ export const AssetObject:SanityDocumentType = {
       type: "array",
       of: [{ type: "reference", to: { type: "filePath" } }],
     },
-    {
-      name: "owner",
-      title: "Owner",
-      type: "reference",
-      to: { type: "user" }, // 拥有者拥有所有权限
-    }
   ],
 };

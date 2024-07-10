@@ -34,6 +34,7 @@ import { SortOrderFilter } from "./filter/sortOrder";
 
 import { SearchExtend } from "./extend/search";
 import { generateMongooseModels } from "./generate/db";
+import { getUser } from "./utils/getUser";
 
 const MONGODB_URI = "mongodb://admin:admin@localhost:27017";
 
@@ -98,6 +99,13 @@ const federationTypeDefs = gql`
   ${fileTypeDefs}
   ${imageTypeDefs}
 
+  type UserPermission {
+    user: User
+    canRead: Boolean
+    canEdit: Boolean
+    canDelete: Boolean
+  }
+
   ${[DirectiveTypeDefs, typeDefs, SearchTypeDefs].join("\n    ")}
         type Query {
         ${fileQueryFields.join("\n  ")}
@@ -150,13 +158,19 @@ mongoose
       listen: { port: 4006 },
       context: async ({ req, res }: any) => {
         // Get the user token from the headers.
+        // const token2 = jwt.sign(
+        //   { iss: "muse", user_id: "668e54289d421a741f5f8c01" },
+        //   "b7e23ec29af22b0b4e41da31e868d572"
+        // );
+        // console.log("token2", token2);
         const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
+        // console.log("token", token);
 
         const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
-        console.log("decoded", decoded);
-        // const user = await getUser(token);
+        // console.log("decoded", decoded);
         // @ts-ignore
-        return { user_id: decoded.user_id }; //todo ts
+        const user = await getUser(decoded.user_id, models);
+        return { user }; //todo ts
       },
     });
   })

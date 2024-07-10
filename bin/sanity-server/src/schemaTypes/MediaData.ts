@@ -35,6 +35,6 @@ export const MediaData: SanityDocumentType = {
       title: "AssetObject",
       type: "reference",
       to: { type: "assetObject" },
-    },
+    }
   ],
 };

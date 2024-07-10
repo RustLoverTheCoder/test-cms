@@ -71,19 +71,19 @@ function convertFieldTypeToMongoose(field: FieldType) {
 
 export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
   // 默认有一个用户权限
-  const userPermissionSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    documentType: { type: String, required: true },
-    documentId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    canRead: { type: Boolean, default: false },
-    canWrite: { type: Boolean, default: false },
-  });
+  // const userPermissionSchema = new mongoose.Schema({
+  //   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  //   documentType: { type: String, required: true },
+  //   documentId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  //   canRead: { type: Boolean, default: false },
+  //   canWrite: { type: Boolean, default: false },
+  // });
 
   const models: any = {
-    UserPermissionSchema: mongoose.model(
-      "UserPermissionSchema",
-      userPermissionSchema
-    ),
+    // UserPermissionSchema: mongoose.model(
+    //   "UserPermissionSchema",
+    //   userPermissionSchema
+    // ),
   };
   schemaTypes.forEach((type) => {
     if (type.type === "document") {
@@ -107,6 +107,24 @@ export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
       fields["_rev"] = {
         type: String,
       };
+
+      const UserPermissionSchema = new mongoose.Schema({
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        canRead: {
+          type: Boolean,
+        },
+        canEdit: {
+          type: Boolean,
+        },
+        canDelete: {
+          type: Boolean,
+        },
+      });
+
+      fields["userPermissions"] = [UserPermissionSchema];
 
       const schemaDefinition = new mongoose.Schema(fields);
       models[type.name.charAt(0).toUpperCase() + type.name.slice(1)] =

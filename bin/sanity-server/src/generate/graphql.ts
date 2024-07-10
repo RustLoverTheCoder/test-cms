@@ -189,6 +189,7 @@ export const generateTypeDefsAndResolvers = (
         type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} implements Document  @authenticated @key(fields: "_id") {
           ${DocumentInterfaceFields}
           ${fields}
+          userPermissions: [UserPermission]
         }
       `);
 
@@ -202,11 +203,19 @@ export const generateTypeDefsAndResolvers = (
       resolvers.Query[`${listName}`] = async (
         _: any,
         { where, sort, offset, limit }: any,
-        _context: any
+        context: any
       ) => {
+        const userId = context?.user?._id;
+        console.log("userId", userId);
+
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
-        let query = Model.find();
+        // todo user 和 user permission 不需要加这个
+        let query = Model.find({
+          "userPermissions.user": userId,
+          "userPermissions.canRead": true,
+        });
+
         // 我们没有草稿
         if (!!where?._?.is_draft) {
           return [];
@@ -242,7 +251,9 @@ export const generateTypeDefsAndResolvers = (
           query.limit(limit);
         }
 
-        return query || [];
+        const res = await query;
+        console.log("res", res);
+        return res || [];
       };
 
       // find type by id
@@ -250,13 +261,28 @@ export const generateTypeDefsAndResolvers = (
       queryFields.push(
         `${findName}(id: ID!): ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}`
       );
-      resolvers.Query[`${findName}`] = async (_parent: any, input: any) => {
+      resolvers.Query[`${findName}`] = async (
+        _parent: any,
+        input: any,
+        context: any
+      ) => {
+        const userId = context?.user?._id;
+
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
 
-        let query = Model.findById(input.id);
+        // todo user 和 user permission 不需要加这个
+        let query = Model.findById({
+          _id: input.id,
+          "userPermissions.user": userId,
+          "userPermissions.canRead": true,
+        });
 
-        return query;
+        const item = await query;
+        if (!item) {
+          throw new Error("Unauthorized");
+        }
+        return item;
       };
 
       // mutation
@@ -286,17 +312,26 @@ export const generateTypeDefsAndResolvers = (
         if (
           field.type === "array" &&
           field.of.length > 0 &&
-          field.of.some((o: any) => o.type === "reference")
+          field.of.some((o: any) => o.type === "reference") &&
+          field.name !== "userPermissions" // 真的权限
         ) {
           resolvers[type.name.charAt(0).toUpperCase() + type.name.slice(1)][
             field.of[0].to.type + "s"
           ] = async (parent: any, { offset, limit }: any, context: any) => {
-            console.log("context", context);
+            console.log(
+              "array",
+              type.name.charAt(0).toUpperCase() + type.name.slice(1),
+              field.of[0].to.type + "s",
+              parent
+            );
+            console.log("array context", context);
             const Model =
               models?.[
                 field.of[0].to.type.charAt(0).toUpperCase() +
                   field.of[0].to.type.slice(1)
               ];
+
+            console.log("Model", Model, type.name);
 
             let query = Model.find({ [type.name]: parent.id });
 
@@ -310,8 +345,8 @@ export const generateTypeDefsAndResolvers = (
             if (!!limit) {
               query.limit(limit);
             }
-
-            return await query;
+            const res = await query;
+            return res || [];
           };
         }
         // object
@@ -382,6 +417,8 @@ export const generateTypeDefsAndResolvers = (
       );
     }
   });
+
+  console.log("resolvers", resolvers);
 
   return {
     typeDefs: typeDefs.join("\n"),

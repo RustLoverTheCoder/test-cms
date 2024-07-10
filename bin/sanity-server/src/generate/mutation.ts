@@ -165,7 +165,21 @@ export const generateMutations = (type: any, fields: any, models: any) => {
       `,
     resolvers: {
       Mutation: {
-        [`create${name}`]: async (_parent: null, { input }: any) => {
+        [`create${name}`]: async (
+          _parent: null,
+          { input }: any,
+          context: any
+        ) => {
+          const userId = context.user._id;
+          // 先创建权限
+          // const UserPermissionModel = models.UserPermission;
+          // const userPermission = new UserPermissionModel({
+          //   user: userId,
+          //   canRead: true,
+          //   canEdit: true,
+          //   canDelete: true,
+          // });
+
           const { _id, ...arg } = input;
           // 这里不能一下子全塞进去了，object引用也要考虑
           console.log("arg", arg);
@@ -234,6 +248,14 @@ export const generateMutations = (type: any, fields: any, models: any) => {
             _type: type,
             _createdAt: new Date(),
             _updatedAt: new Date(),
+            userPermissions: [
+              {
+                user: userId,
+                canRead: true,
+                canEdit: true,
+                canDelete: true,
+              },
+            ],
             ...inputObjectModels,
             ...arg,
           });
@@ -265,7 +287,10 @@ export const generateMutations = (type: any, fields: any, models: any) => {
               { new: true }
             );
           }
+          // await userPermission.save()
+
           await model.save();
+
           return model;
         },
         [`createOrReplace${name}`]: async (_parent: null, { input }: any) => {
