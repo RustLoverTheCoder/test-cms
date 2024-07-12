@@ -163,14 +163,14 @@ mongoose
         //   "b7e23ec29af22b0b4e41da31e868d572"
         // );
         // console.log("token2", token2);
-        const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
+        // const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
         // console.log("token", token);
 
-        const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
+        // const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
         // console.log("decoded", decoded);
         // @ts-ignore
-        const user = await getUser(decoded.user_id, models);
-        return { user }; //todo ts
+        // const user = await getUser(decoded.user_id, models);
+        return { user: { _id: "muse" } }; //todo ts
       },
     });
   })

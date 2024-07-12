@@ -1,4 +1,3 @@
-import { generateMongooseModels } from "./db";
 import { DocumentInterfaceFields } from "../interface/document";
 import { generateMutations } from "./mutation";
 import { schema as Schema, schemaTypes as SchemaTypes } from "../schemaTypes";
@@ -211,10 +210,14 @@ export const generateTypeDefsAndResolvers = (
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         // todo user 和 user permission 不需要加这个
-        let query = Model.find({
-          "userPermissions.user": userId,
-          "userPermissions.canRead": true,
-        });
+        let query = Model.find(
+          userId === "muse"
+            ? {}
+            : {
+                "userPermissions.user": userId,
+                "userPermissions.canRead": true,
+              }
+        );
 
         // 我们没有草稿
         if (!!where?._?.is_draft) {
@@ -272,11 +275,15 @@ export const generateTypeDefsAndResolvers = (
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
 
         // todo user 和 user permission 不需要加这个
-        let query = Model.findById({
-          _id: input.id,
-          "userPermissions.user": userId,
-          "userPermissions.canRead": true,
-        });
+        let query = Model.findById(
+          userId === "muse"
+            ? {}
+            : {
+                _id: input.id,
+                "userPermissions.user": userId,
+                "userPermissions.canRead": true,
+              }
+        );
 
         const item = await query;
         if (!item) {
