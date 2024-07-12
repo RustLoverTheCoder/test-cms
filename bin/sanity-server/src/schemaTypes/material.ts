@@ -33,11 +33,6 @@ export const Material: SanityDocumentType = {
       type: "number",
     },
     {
-      name: "tag",
-      title: "Tag",
-      type: "string",
-    },
-    {
       name: "description",
       title: "Description",
       type: "string",

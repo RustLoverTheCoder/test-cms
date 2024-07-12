@@ -38,9 +38,10 @@ export const Folder: SanityDocumentType = {
       type: "number",
     },
     {
-      name: "tag",
-      title: "Tag",
-      type: "string",
+      name: "tags",
+      title: "Tags",
+      type: "array",
+      of: [{ type: "reference", to: { type: "tag" } }],
     },
     {
       name: "description",
