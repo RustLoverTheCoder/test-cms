@@ -154,6 +154,16 @@ mongoose
   .connect(MONGODB_URI)
   .then(async () => {
     console.log("MongoDB Connected Successfully");
+    // 添加admin
+    const UserModel = models.User;
+    const admin = new UserModel({
+      _id: "6694f3885ec2b15395cf8246",
+      name: "admin",
+      role: "admin",
+    });
+
+    await admin.save()
+
     return startStandaloneServer(server, {
       listen: { port: 4006 },
       context: async ({ req, res }: any) => {

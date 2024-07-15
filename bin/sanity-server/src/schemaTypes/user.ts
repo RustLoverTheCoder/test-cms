@@ -10,5 +10,10 @@ export const User: SanityDocumentType = {
       title: "Name",
       type: "string",
     },
+    {
+      name: "role",
+      title: "Role",
+      type: "string",
+    },
   ],
 };
