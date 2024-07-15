@@ -25,7 +25,7 @@ export const Folder: SanityDocumentType = {
     {
       name: "name",
       title: "Name",
-      type: "string",
+      type: "localizedString",
     },
     {
       name: "size",

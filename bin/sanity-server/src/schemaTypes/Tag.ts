@@ -14,7 +14,7 @@ export const Tag: SanityDocumentType = {
     {
       name: "name",
       title: "name",
-      type: "string",
+      type: "localizedString",
     },
     {
       name: "create_user",

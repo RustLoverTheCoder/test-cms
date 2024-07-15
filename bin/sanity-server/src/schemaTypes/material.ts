@@ -14,7 +14,7 @@ export const Material: SanityDocumentType = {
     {
       name: "name",
       title: "Name",
-      type: "string",
+      type: "localizedString",
     },
     {
       name: "user",
