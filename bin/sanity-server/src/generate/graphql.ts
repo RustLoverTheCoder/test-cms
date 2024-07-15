@@ -205,13 +205,14 @@ export const generateTypeDefsAndResolvers = (
         context: any
       ) => {
         const userId = context?.user?._id;
-        console.log("userId", userId);
+        const role = context?.user?.role;
+        console.log("userId", userId, "role", role);
 
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
         // todo user 和 user permission 不需要加这个
         let query = Model.find(
-          userId === "muse"
+          role === "admin"
             ? {}
             : {
                 "userPermissions.user": userId,
@@ -270,13 +271,14 @@ export const generateTypeDefsAndResolvers = (
         context: any
       ) => {
         const userId = context?.user?._id;
+        const role = context?.user?.role;
 
         const Model =
           models?.[type.name.charAt(0).toUpperCase() + type.name.slice(1)];
 
         // todo user 和 user permission 不需要加这个
         let query = Model.findById(
-          userId === "muse"
+          role === "admin"
             ? {}
             : {
                 _id: input.id,

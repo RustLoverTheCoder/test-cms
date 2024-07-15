@@ -156,31 +156,34 @@ mongoose
     console.log("MongoDB Connected Successfully");
     // 添加admin
     const UserModel = models.User;
-    const admin = new UserModel({
-      _id: "6694f3885ec2b15395cf8246",
-      name: "admin",
-      role: "admin",
-    });
-
-    await admin.save()
+    const user = await UserModel.findById("6694f3885ec2b15395cf8246");
+    if (!user) {
+      const admin = new UserModel({
+        _id: "6694f3885ec2b15395cf8246",
+        name: "admin",
+        role: "admin",
+      });
+      await admin.save();
+    }
 
     return startStandaloneServer(server, {
       listen: { port: 4006 },
       context: async ({ req, res }: any) => {
         // Get the user token from the headers.
         // const token2 = jwt.sign(
-        //   { iss: "muse", user_id: "668e54289d421a741f5f8c01" },
+        //   { iss: "muse", user_id: "6694f3885ec2b15395cf8246" },
         //   "b7e23ec29af22b0b4e41da31e868d572"
         // );
         // console.log("token2", token2);
-        // const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
+        const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
         // console.log("token", token);
 
-        // const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
+        const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
         // console.log("decoded", decoded);
         // @ts-ignore
-        // const user = await getUser(decoded.user_id, models);
-        return { user: { _id: "muse" } }; //todo ts
+        const user = await getUser(decoded.user_id, models);
+
+        return { user: user }; 
       },
     });
   })
