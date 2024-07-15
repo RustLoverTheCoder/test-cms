@@ -180,47 +180,51 @@ export const generateMutations = (type: any, fields: any, models: any) => {
           );
           return model;
         },
-        [`createOrReplace${name}`]: async (_parent: null, { input }: any) => {
+        [`createOrReplace${name}`]: async (
+          _parent: null,
+          { input }: any,
+          context: any
+        ) => {
           const { _id, ...arg } = input;
           const Model = models?.[name];
-          // todo object问题
-          const model = await Model.findByIdAndUpdate(
-            _id,
-            {
-              _type: type,
-              _updatedAt: new Date(),
-              ...arg,
-            },
-            { upsert: true, new: true }
+          const existingModel = await Model.findById(_id);
+          if (existingModel) {
+            await deleteDocument(input, models, name);
+          }
+          const model = await create(
+            context,
+            input,
+            fields,
+            models,
+            name,
+            type
           );
           return model;
         },
-        [`createIfNotExists${name}`]: async (_parent: null, { input }: any) => {
-          const { _id, ...arg } = input;
+        [`createIfNotExists${name}`]: async (
+          _parent: null,
+          { input }: any,
+          context: any
+        ) => {
+          const { _id } = input;
           const Model = models?.[name];
           const existingModel = await Model.findById(_id);
           if (existingModel) {
             return existingModel;
           }
           // 通用创建
-          const model = new Model({
-            _id: _id
-              ? new mongoose.Types.ObjectId(_id)
-              : new mongoose.Types.ObjectId(),
-            _type: type,
-            _createdAt: new Date(),
-            _updatedAt: new Date(),
-            ...arg,
-          });
-          await model.save();
+          const model = await create(
+            context,
+            input,
+            fields,
+            models,
+            name,
+            type
+          );
           return model;
         },
         [`delete${name}`]: async (_parent: null, { input }: any) => {
-          const { id } = input;
-          const Model = models?.[name];
-          await Model.findByIdAndDelete(id);
-          // todo 删除需要把关联的给删除，因为是强绑定 除非weak：true
-          // todo 删除object的关联
+          await deleteDocument(input, models, name);
           return "Deleted successfully";
         },
         [`patch${name}`]: async (_parent: null, { input }: any) => {
@@ -367,4 +371,12 @@ const create = async (
 
   await model.save();
   return model;
+};
+
+const deleteDocument = async (input: any, models: any, name: any) => {
+  const { id } = input;
+  const Model = models?.[name];
+  await Model.findByIdAndDelete(id);
+  // todo 删除需要把关联的给删除，因为是强绑定 除非weak：true
+  // todo 删除object的关联
 };
