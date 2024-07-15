@@ -188,7 +188,7 @@ export const generateTypeDefsAndResolvers = (
         type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} implements Document  @authenticated @key(fields: "_id") {
           ${DocumentInterfaceFields}
           ${fields}
-          userPermissions: [UserPermission]
+          ## ${type.name.charAt(0).toUpperCase() + type.name.slice(1) === "User" ? "" : "userPermissions: [UserPermission]"}
         }
       `);
 

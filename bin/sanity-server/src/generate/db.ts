@@ -124,7 +124,9 @@ export const generateMongooseModels = (schemaTypes: typeof SchemaTypes) => {
         },
       });
 
-      fields["userPermissions"] = [UserPermissionSchema];
+      if (type.name !== "user") {
+        fields["userPermissions"] = [UserPermissionSchema];
+      }
 
       const schemaDefinition = new mongoose.Schema(fields);
       models[type.name.charAt(0).toUpperCase() + type.name.slice(1)] =
