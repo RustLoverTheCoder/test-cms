@@ -170,127 +170,14 @@ export const generateMutations = (type: any, fields: any, models: any) => {
           { input }: any,
           context: any
         ) => {
-          const userId = context.user._id;
-          // 先创建权限
-          // const UserPermissionModel = models.UserPermission;
-          // const userPermission = new UserPermissionModel({
-          //   user: userId,
-          //   canRead: true,
-          //   canEdit: true,
-          //   canDelete: true,
-          // });
-
-          const { _id, ...arg } = input;
-          // 这里不能一下子全塞进去了，object引用也要考虑
-          console.log("arg", arg);
-          // 找到object类型
-          const objectTypeListField: any[] = [];
-          fields.forEach((field: any) => {
-            if (
-              field.type !== "string" &&
-              field.type !== "slug" &&
-              field.type !== "image" &&
-              field.type !== "array" &&
-              field.type !== "reference" &&
-              field.type !== "datetime" &&
-              field.type !== "date" &&
-              field.type !== "file" &&
-              field.type !== "geopoint" &&
-              field.type !== "number" &&
-              field.type !== "object" &&
-              field.type !== "text" &&
-              field.type !== "url" &&
-              field.type !== "blockContent" &&
-              field.type !== "boolean"
-            ) {
-              objectTypeListField.push(field);
-            }
-          });
-          const inputObjectList: string[] = [];
-          if (objectTypeListField.length > 0) {
-            objectTypeListField.forEach((field) => {
-              if (!!arg?.[field.name]) {
-                inputObjectList.push(field.name);
-              }
-            });
-          }
-
-          const inputObjectModels: any = {};
-
-          if (inputObjectList.length > 0) {
-            inputObjectList.forEach(async (inputObject) => {
-              const inputObjectType = objectTypeListField.find(
-                (field) => field.name === inputObject
-              );
-              const InputObjectModel =
-                models?.[
-                  inputObjectType.type.charAt(0).toUpperCase() +
-                    inputObjectType.type.slice(1)
-                ];
-              const inputObjectModel = new InputObjectModel({
-                ...arg?.[inputObject],
-              });
-              inputObjectModels[inputObject] = inputObjectModel._id;
-              await inputObjectModel.save();
-            });
-          }
-
-          const Model = models?.[name];
-
-          inputObjectList.forEach((i) => {
-            delete arg[i];
-          });
-
-          const model = new Model({
-            _id: _id
-              ? new mongoose.Types.ObjectId(_id)
-              : new mongoose.Types.ObjectId(),
-            _type: type,
-            _createdAt: new Date(),
-            _updatedAt: new Date(),
-            userPermissions: [
-              {
-                user: userId,
-                canRead: true,
-                canEdit: true,
-                canDelete: true,
-              },
-            ],
-            ...inputObjectModels,
-            ...arg,
-          });
-
-          const typeReference = fields.find(
-            (field: any) => field.type === "reference"
+          const model = await create(
+            context,
+            input,
+            fields,
+            models,
+            name,
+            type
           );
-
-          if (!!typeReference) {
-            const to = typeReference.to.type;
-            const referenceModel =
-              models?.[to.charAt(0).toUpperCase() + to.slice(1)];
-            const id = input?.[to];
-            const modelId = model._id.toString();
-            // todo 这里需要区分 to 文档 对自己是array还是
-            await referenceModel.findByIdAndUpdate(
-              id,
-              {
-                $set: { [`${type}`]: modelId },
-              },
-              { new: true }
-            );
-
-            await referenceModel.findByIdAndUpdate(
-              id,
-              {
-                $push: { [`${type}s`]: modelId },
-              },
-              { new: true }
-            );
-          }
-          // await userPermission.save()
-
-          await model.save();
-
           return model;
         },
         [`createOrReplace${name}`]: async (_parent: null, { input }: any) => {
@@ -365,4 +252,119 @@ export const generateMutations = (type: any, fields: any, models: any) => {
       },
     },
   };
+};
+
+const create = async (
+  context: any,
+  input: any,
+  fields: any,
+  models: any,
+  name: string,
+  type: any
+) => {
+  const userId = context.user._id;
+  const { _id, ...arg } = input;
+  // 找到object类型
+  const objectTypeListField: any[] = [];
+  fields.forEach((field: any) => {
+    if (
+      field.type !== "string" &&
+      field.type !== "slug" &&
+      field.type !== "image" &&
+      field.type !== "array" &&
+      field.type !== "reference" &&
+      field.type !== "datetime" &&
+      field.type !== "date" &&
+      field.type !== "file" &&
+      field.type !== "geopoint" &&
+      field.type !== "number" &&
+      field.type !== "object" &&
+      field.type !== "text" &&
+      field.type !== "url" &&
+      field.type !== "blockContent" &&
+      field.type !== "boolean"
+    ) {
+      objectTypeListField.push(field);
+    }
+  });
+  const inputObjectList: string[] = [];
+  if (objectTypeListField.length > 0) {
+    objectTypeListField.forEach((field) => {
+      if (!!arg?.[field.name]) {
+        inputObjectList.push(field.name);
+      }
+    });
+  }
+
+  const inputObjectModels: any = {};
+
+  if (inputObjectList.length > 0) {
+    inputObjectList.forEach(async (inputObject) => {
+      const inputObjectType = objectTypeListField.find(
+        (field) => field.name === inputObject
+      );
+      const InputObjectModel =
+        models?.[
+          inputObjectType.type.charAt(0).toUpperCase() +
+            inputObjectType.type.slice(1)
+        ];
+      const inputObjectModel = new InputObjectModel({
+        ...arg?.[inputObject],
+      });
+      inputObjectModels[inputObject] = inputObjectModel._id;
+      await inputObjectModel.save();
+    });
+  }
+
+  const Model = models?.[name];
+
+  inputObjectList.forEach((i) => {
+    delete arg[i];
+  });
+
+  const model = new Model({
+    _id: _id ? new mongoose.Types.ObjectId(_id) : new mongoose.Types.ObjectId(),
+    _type: type,
+    _createdAt: new Date(),
+    _updatedAt: new Date(),
+    userPermissions: [
+      {
+        user: userId,
+        canRead: true,
+        canEdit: true,
+        canDelete: true,
+      },
+    ],
+    ...inputObjectModels,
+    ...arg,
+  });
+
+  const typeReference = fields.find((field: any) => field.type === "reference");
+
+  if (!!typeReference) {
+    const to = typeReference.to.type;
+    const referenceModel = models?.[to.charAt(0).toUpperCase() + to.slice(1)];
+    const id = input?.[to];
+    const modelId = model._id.toString();
+    // todo 这里需要区分 to 文档 对自己是array还是
+    await referenceModel.findByIdAndUpdate(
+      id,
+      {
+        $set: { [`${type}`]: modelId },
+      },
+      { new: true }
+    );
+
+    await referenceModel.findByIdAndUpdate(
+      id,
+      {
+        $push: { [`${type}s`]: modelId },
+      },
+      { new: true }
+    );
+  }
+  // await userPermission.save()
+
+  await model.save();
+  return model;
 };
