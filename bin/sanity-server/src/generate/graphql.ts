@@ -71,7 +71,7 @@ const convertGraphqlFilterType = (field: FieldType) => {
     case "blockContent":
       return "JSON";
     default:
-      return "StringFilter";
+      return `${field.type.charAt(0).toUpperCase() + field.type.slice(1)}Filter`;
   }
 };
 
@@ -403,6 +403,15 @@ export const generateTypeDefsAndResolvers = (
         })
         .join("\n    ");
 
+      const filterFields = type.fields
+        .map((field: any) => {
+          if (field.type !== "array" && field.type !== "blockContent") {
+            const fieldType = convertGraphqlFilterType(field);
+            return `${field.name}: ${fieldType}`;
+          }
+        })
+        .join("\n    ");
+
       const {
         typeDefs: MutationTypeDefs,
         mutaionField,
@@ -410,10 +419,16 @@ export const generateTypeDefsAndResolvers = (
       } = generateMutations(type.name, type.fields, models);
 
       typeDefs.push(`
+        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter {
+          ${filterFields}
+        }
+
         input ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Input {
           ${fields}
         }
+        
         ${MutationTypeDefs}
+
         type ${type.name.charAt(0).toUpperCase() + type.name.slice(1)} {
           ${fields}
         }

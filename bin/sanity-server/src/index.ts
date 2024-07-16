@@ -175,15 +175,15 @@ mongoose
         //   "b7e23ec29af22b0b4e41da31e868d572"
         // );
         // console.log("token2", token2);
-        // const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
-        // console.log("token", token);
+        const token = req.headers.authorization.replace(/^Bearer\s+/, "") || "";
+        console.log("token", token);
 
-        // const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
-        // console.log("decoded", decoded);
-        // // @ts-ignore
-        // const user = await getUser(decoded.user_id, models);
+        const decoded = jwt.verify(token, "b7e23ec29af22b0b4e41da31e868d572");
+        console.log("decoded", decoded);
+        // @ts-ignore
+        const user = await getUser(decoded.user_id, models);
 
-        return { user: { name: "xxx", role: "admin" } };
+        return { user: user || { name: "xxx", role: "admin" } };
       },
     });
   })
