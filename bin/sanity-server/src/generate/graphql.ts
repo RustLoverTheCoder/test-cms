@@ -201,9 +201,17 @@ export const generateTypeDefsAndResolvers = (
 
       resolvers.Query[`${listName}`] = async (
         _: any,
-        { where, sort, offset, limit }: any,
+        {
+          where,
+          sort,
+          offset,
+          limit,
+        }: { where?: any; sort?: any[]; offset?: number; limit?: number },
         context: any
       ) => {
+        console.log(`${listName}  where->>`, where);
+        console.log(`${listName}  sort->>`, sort);
+
         const userId = context?.user?._id;
         const role = context?.user?.role;
         console.log("userId", userId, "role", role);
@@ -243,7 +251,11 @@ export const generateTypeDefsAndResolvers = (
         }
         // sort
         if (!!sort) {
-          const mongooseSort = flattenSort(sort[0]);
+          const mongooseSort = {};
+          sort.forEach((s) => {
+            const item = flattenSort(s);
+            Object.assign(mongooseSort, item);
+          });
           console.log("mongooseSort", mongooseSort);
           query.sort(mongooseSort);
         }
@@ -256,7 +268,6 @@ export const generateTypeDefsAndResolvers = (
         }
 
         const res = await query;
-        console.log("res", res);
         return res || [];
       };
 
