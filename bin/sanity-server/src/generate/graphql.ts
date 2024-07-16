@@ -101,7 +101,7 @@ const convertGraphqlSortOrderType = (field: FieldType) => {
     case "url":
       return "SortOrder";
     default:
-      return "SortOrder";
+      return `${field.type.charAt(0).toUpperCase() + field.type.slice(1)}Sorting`;
   }
 };
 
@@ -412,6 +412,19 @@ export const generateTypeDefsAndResolvers = (
         })
         .join("\n    ");
 
+      const sortOrderFields = type.fields
+        .map((field: any) => {
+          if (
+            field.type !== "array" &&
+            field.type !== "reference" &&
+            field.type !== "blockContent"
+          ) {
+            const fieldType = convertGraphqlSortOrderType(field);
+            return `${field.name}: ${fieldType}`;
+          }
+        })
+        .join("\n    ");
+
       const {
         typeDefs: MutationTypeDefs,
         mutaionField,
@@ -421,6 +434,10 @@ export const generateTypeDefsAndResolvers = (
       typeDefs.push(`
         input ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Filter {
           ${filterFields}
+        }
+
+        input ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Sorting {
+          ${sortOrderFields}
         }
 
         input ${type.name.charAt(0).toUpperCase() + type.name.slice(1)}Input {
