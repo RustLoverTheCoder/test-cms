@@ -15,30 +15,34 @@ rover supergraph compose --config ./supergraph.yaml --output supergraph.graphql
 cargo install oha
 oha -m POST -c 8 -z 10s -A 'content-type: application/json' -d '{"query":"query { accounts {id} }"}' 'http://127.0.0.1:4000/'
 
-## Role and Permissions
 
-### Super Admin
 
-拥有所有的权限
+## crop
 
-### Org Admin
+### 基础图片处理
 
-拥有对整个组织（包括其成员、图表和配置）的管理访问权限
+1. 格式转化
+2. 自适应格式
+3. 压缩
+4. 裁剪
+5. 旋转/翻转
+6. 负片
+7. 缩放
+8. 锐化
+9. 调色
+10. 图文水印
+11. 圆角矩形
+12. 高斯模糊
 
-### Documenter
+### 智能图片处理
 
-记录员：拥有观察者角色的所有权限，以及编辑操作元数据的能力。
+1. 画质评分
+2. 画质增强
+3. 智能裁剪
+4. 多图合成
+5. 智能抠图
+6. 集智瘦身
+7. 盲水印
+8. 智能审核
+9. 图片修复
 
-### Observer
-
-仅查看访问权限
-
-### Consumer
-
-客户端查询
-
-### Billing Manager
-
-具有对组织级配置和计费的管理访问权限。还可以删除成员（但不能邀请他们）
-
-## 对接口的权限，对字段的权限，对服务的权限
